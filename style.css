@@ -22,28 +22,31 @@ body{
     background: darkslategray;
 }
 
-#testBoss{
+.turretContainer{
     position: absolute;
-    left: 66%;
-    top: 50%;
     width: 50px;
     height: 50px;
     background: orange;
-    border-radius: 100%;
+    /* border-radius: 100%; */
     border: red 3px solid;
     transform: translate(-50%, -50%);
 }
 
-#otherTurret{
-    position: absolute;
-    left: 33%;
+#testBoss{
+    left: 25%;
     top: 25%;
-    width: 50px;
-    height: 50px;
-    background: orange;
-    border-radius: 100%;
-    border: red 3px solid;
-    transform: translate(-50%, -50%);
+
+}
+
+#otherTurret{
+    left: 50%;
+    top: 75%;
+
+}
+
+#otherOtherTurret{
+    left: 75%;
+    top: 50%;
 }
 
 .turret{
@@ -57,9 +60,22 @@ body{
     border: red 1px solid;
 }
 
+.tint{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 0);
+    transform: scale(1.5);
+}
+
 .autoTurret{
     width: 100%;
     height: 100%;
+    background: orange;
+    border: red 3px solid;
+    border-radius: 25%;
 }
 
 .bullet{

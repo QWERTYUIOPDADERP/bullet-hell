@@ -5,7 +5,7 @@ let y = 0;
 let dx = 0;
 let dy = 0;
 let screenX = window.innerWidth;
-let screenY = window.innerWidth;
+let screenY = window.innerHeight;
 let playerSize = 20;
 let playerAngle = 0;
 // 0 = up
@@ -23,19 +23,32 @@ const playerStates = {
     speedy: {type: 'fast', speed: 4, color: "red"}
 };
 
-let playerState = playerStates.default;
+let mouseX = 0;
+let mouseY = 0;
 
 let turretList = [];
 let enemyAttacks = [];
 let playerAttacks = [];
 
-function Turt(element, angle, speed, reload, counter) {
+function Turt(health, element, angle, speed, reload, counter) {
+    this.health = health;
+    this.maxHealth = health;
     this.element = element;
     this.angle = angle;
     this.speed = speed;
     this.reload = reload;
     this.counter = counter;
 }
+
+const char = {
+    maxHealth: 20,
+    health: 20,
+    state: playerStates.default,
+    fireSpeed: 15,
+    counter: 0,
+    damage: 1,
+}
+
 document.addEventListener("keydown", (e) => {
     const key = e.key;
     switch (key) {
@@ -104,9 +117,11 @@ document.addEventListener("keyup", (e) => {
 });
 
 document.addEventListener('mousemove', (event) => {
-    const mouseX = event.clientX;
-    const mouseY = event.clientY;
-  
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+});
+
+function updatePlayerAngle(){
     const pointerRect = player.getBoundingClientRect();
     const pointerCenterX = pointerRect.left + pointerRect.width / 2;
     const pointerCenterY = pointerRect.top + pointerRect.height / 2;
@@ -118,7 +133,7 @@ document.addEventListener('mousemove', (event) => {
   
     playerAngle = angle;
     player.style.transform = `rotate(${angle}deg)`;
-});
+}
 
 document.addEventListener('mousedown', function(event) {
     if (event.buttons === 1) {
@@ -133,19 +148,32 @@ document.addEventListener('mouseup', function(event) {
 });
 
 function gameplay(){
-    calcPlayerMovement(playerState.speed);
+    calcPlayerMovement(char.state.speed);
     collide();
     movePlayer();
     friction();
     parseEnemeies();
+    updatePlayerAngle();
     updateAttacks();
-    if(pAttack){
-        fireEnemyBullet(x, y, 15, playerAngle);
+    updatePlayerCombat();
+}
+
+function updatePlayerCombat(){
+    if(char.health<=0){
+        player.remove();
     }
+    if(char.counter >= char.fireSpeed && pAttack){
+        char.counter = 0;
+        const p = player.getBoundingClientRect()
+        firePlayerBullet(p.x+p.width/2, p.y+p.height/2, 15, playerAngle, dx, dy);
+    } else {
+        char.counter ++;
+    }
+    player.style.filter = `grayscale(${1-(char.health/char.maxHealth)})`
 }
 
 function parseEnemeies(){
-    aimTurrets(x+12.5, y+12.5);
+    doTurrets((x+12.5), screenY-(y+12.5));
 }
 
 function calcPlayerMovement(speed){
@@ -190,6 +218,8 @@ function collide(){
 }
 
 function movePlayer(){
+    screenX = window.innerWidth;
+    // screenY = window.innerHeight;
     x += dx;
     y += dy;
     player.style.left = `${x}px`;
@@ -205,28 +235,13 @@ const getNextEnumItem = (enumeration, currentItem) => {
     return enumValues[nextIndex];
 };
 
-function getRotationAngle(element) {
-    const style = window.getComputedStyle(element);
-    const matrix = style.getPropertyValue('transform') || style.getPropertyValue('-webkit-transform') || style.getPropertyValue('-moz-transform') || style.getPropertyValue('-ms-transform') || style.getPropertyValue('-o-transform');
-  
-    if (matrix !== 'none') {
-      const values = matrix.split('(')[1].split(')')[0].split(',');
-      const a = parseFloat(values[0]);
-      const b = parseFloat(values[1]);
-      const angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
-      return angle;
-    }
-  
-    return 0;
-}
-
 function normalizeAngle(angle) {
     return ((angle % 360) + 360) % 360;
 }
 
 function togglePlayerMode(){
-    playerState = getNextEnumItem(playerStates, playerState);
-    setPlayer(playerState);
+    char.state = getNextEnumItem(playerStates, char.state);
+    setPlayer(char.state);
 }
 
 function setPlayer(state){
@@ -235,26 +250,33 @@ function setPlayer(state){
 
 function setUpTurrets(){
     for(const turret of turrets) {
-        turretList.push(new Turt(turret, 0, 4, 15, 0));
+        turretList.push(new Turt(10, turret, 0, 4, 15, 0));
     };
 }
 
-function aimTurrets(targetX, targetY){
-    turretList.forEach(turt => {
-        if(turt.counter < 0){
-            turt.counter ++;
+function doTurrets(targetX, targetY){
+    for (let tur of turretList){
+        if(tur.health<=0){
+            turretList.splice(turretList.indexOf(tur), 1);
+            tur.element.parentNode.remove();
+            continue;
+        }
+        const tint = tur.element.nextElementSibling;
+        tint.style.backgroundColor = `rgba(255,0,0,${((tur.maxHealth-tur.health)/tur.maxHealth)/2})`;
+        if(tur.counter < 0){
+            tur.counter ++;
         } else {
-            const rect = turt.element.getBoundingClientRect();
+            const rect = tur.element.getBoundingClientRect();
     
             const divCenterX = rect.left + rect.width / 2;
             const divCenterY = rect.top + rect.height / 2;
             
             const deltaX = (targetX) - divCenterX;
-            const deltaY = divCenterY - (targetY);
+            const deltaY = targetY - (divCenterY);
             
             let targetAngle = normalizeAngle(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
     
-            const currentAngle = normalizeAngle(getRotationAngle(turt.element));
+            const currentAngle = normalizeAngle(tur.angle);
     
             targetAngle += (currentAngle - (currentAngle % 360));
             if((targetAngle-currentAngle) > 180){
@@ -263,25 +285,25 @@ function aimTurrets(targetX, targetY){
                 targetAngle+=360;
             }
     
-            if(Math.abs(targetAngle - currentAngle) > turt.speed){
-                turt.angle = currentAngle + Math.min(turt.speed, Math.max(-turt.speed, targetAngle - currentAngle));
+            if(Math.abs(targetAngle - currentAngle) > tur.speed){
+                tur.angle = currentAngle + Math.min(tur.speed, Math.max(-tur.speed, targetAngle - currentAngle));
             } else {
-                turt.angle = targetAngle;
+                tur.angle = targetAngle;
             }
     
-            turt.element.style.transform = `rotate(${(turt.angle)}deg)`;
+            tur.element.style.transform = `rotate(${(tur.angle)}deg)`;
     
-            if(turt.counter>turt.reload && Math.abs(targetAngle - turt.angle) < 5){
-                turt.counter = -8;
-                fireEnemyBullet(divCenterX, divCenterY, 15, turt.angle);
+            if(tur.counter>tur.reload && Math.abs(targetAngle - tur.angle) < 5){
+                tur.counter = -8;
+                fireEnemyBullet(divCenterX, divCenterY, 15, tur.angle);
             } else {
-                turt.counter ++;
+                tur.counter ++;
             }
         }
-    });
+    };
 }
 
-function createBullet(x, y, speed, angle, color = 'black', radius = 8) {
+function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 5, dx = 0, dy = 0) {
     const elm = document.createElement('div');
     elm.className = 'bullet'
     document.body.appendChild(elm);
@@ -289,13 +311,16 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8) {
     return {
         element: elm,
         x: x,
+        dx: dx,
+        dy: dy,
         y: y,
+        damage: damage,
         speed: speed,
         angle: angle,
         radius: radius,
         color: color,
-        update: function(isPlayer = false) {
-            checkRemoveAttack(this, isPlayer);
+        update: function() {
+            checkRemoveAttack(this);
 
             this.x += this.speed * Math.cos(this.angle/180*Math.PI);
             this.y += this.speed * Math.sin(this.angle/180*Math.PI);
@@ -304,10 +329,23 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8) {
             this.element.style.width = `${radius*2}px`;
             this.element.style.height = `${radius*2}px`;
         },
+        playerUpdate: function() {
+            checkRemoveAttack(this, false);
+
+            this.x += this.speed * Math.cos(this.angle/180*Math.PI) + dx/1.8;
+            this.y += this.speed * Math.sin(this.angle/180*Math.PI) - dy/1.8;
+            this.element.style.transform = `translate(${this.x-this.radius}px, ${this.y-this.radius}px) rotate(${this.angle}deg)`;
+            this.element.style.backgroundColor = `${color}`;
+            this.element.style.width = `${radius*2}px`;
+            this.element.style.height = `${radius*2}px`;
+
+            dx /= 1.2;
+            dy /= 1.2;
+        },
     };
 }
 
-function checkRemoveAttack(attack, isPlayer){
+function checkRemoveAttack(attack, check = true){
     const rect = attack.element.getBoundingClientRect();
     const isOffScreen = (
       rect.bottom < 0 ||
@@ -316,20 +354,36 @@ function checkRemoveAttack(attack, isPlayer){
       rect.left > (window.innerWidth || document.documentElement.clientWidth)
     );
 
-    if (isOffScreen) {
+    if (isOffScreen && check) {
         removeAttack(attack)
+    } else if (isOffScreen && !check){
+        removePlayerAttack(attack)
     }
 
-    if(!isPlayer){
+    if(check){
         if(checkRectCollision(attack.element, player)){
             removeAttack(attack);
+            char.health -= attack.damage;
         }
+    } else {
+        for (let turt of turretList){
+            if(checkRectCollision(attack.element, turt.element)){
+                removePlayerAttack(attack);
+                turt.health -= attack.damage;
+                break;
+            }
+        };
     }
 }
 
 function removeAttack(attack){
     attack.element.remove();
     enemyAttacks.splice(enemyAttacks.indexOf(attack), 1);
+}
+
+function removePlayerAttack(attack){
+    attack.element.remove();
+    playerAttacks.splice(playerAttacks.indexOf(attack), 1);
 }
 
 function checkRectCollision(div1, div2) {
@@ -351,8 +405,8 @@ function fireEnemyBullet(x, y, speed, angle){
     enemyAttacks.push(bullet);
 }
 
-function firePlayerBullet(x, y, speed, angle){
-    const bullet = createBullet(x, y, speed, angle);
+function firePlayerBullet(x, y, speed, angle, dx, dy){
+    const bullet = createBullet(x, y, speed, angle, char.state.color, 5, char.damage, dx, dy);
     playerAttacks.push(bullet);
 }
 
@@ -369,6 +423,6 @@ function updateAttacks(){
         attack.update();
     });
     playerAttacks.forEach(attack => {
-        attack.update(true);
+        attack.playerUpdate();
     });
 }
