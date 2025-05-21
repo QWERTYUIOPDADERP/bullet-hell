@@ -1,13 +1,14 @@
 let keys = [false, false, false, false];
 let pAttack = false;
-let x = 0;
-let y = 0;
 let dx = 0;
 let dy = 0;
 let screenX = window.innerWidth;
 let screenY = window.innerHeight;
-let playerSize = 20;
+let playerSize = 25;
+let x = screenX/2 - playerSize/2;
+let y = screenY/2 - playerSize/2;
 let playerAngle = 0;
+let score = 0;
 // 0 = up
 // 1 = left
 // 2 = right
@@ -15,12 +16,40 @@ let playerAngle = 0;
 
 let player = document.getElementById('player');
 let txt = document.getElementById('testingText');
+let startScreen = document.getElementById('start');
+let dude = document.getElementById('boss');
+
+let startTime = 0;
 
 let turrets = document.getElementsByClassName('autoTurret');
 
 const playerStates = {
     default: {type: 'normal', speed: 2, color: "blue"},
     speedy: {type: 'fast', speed: 4, color: "red"}
+};
+
+const enemyStates = {
+    defaultFar: {
+        type: 'normalFar', 
+        moveSpeed: 2,
+        turnSpeed: 10, 
+        attack: ()=> createTurret(),
+        reload: 20,
+        idealDistance: 300,
+        lowerDistance: 150,
+        tooClose: ()=>enemyStates.find(obj => obj.type === 'normalClose'),
+    },
+    defaultClose: {
+        type: 'normalClose', 
+        moveSpeed: 3,
+        turnSpeed: 10,  
+        attack: ()=> console.log('toDO'),
+        reload: 15,
+        idealDistance: 80,
+        upperDistance: 200,
+        tooFar: this.defaultFar,
+    },
+    // speedy: {type: 'fast', speed: 4, color: "red"}
 };
 
 let mouseX = 0;
@@ -40,6 +69,30 @@ function Turt(health, element, angle, speed, reload, counter) {
     this.counter = counter;
 }
 
+function Boss(x, y, health, element, angle, counter) {
+    this.x = x;
+    this.y = y;
+    this.state = enemyStates.defaultFar;
+    // this.dx = dx;
+    // this.dy = dy;
+    this.health = health;
+    this.maxHealth = health;
+    this.element = element;
+    this.angle = angle;
+    this.counter = counter;
+}
+
+const boss1 = {
+    x: screenX/2,
+    y: screenY/2,
+    state: enemyStates.defaultFar,
+    health: 25,
+    maxHealth: 25,
+    element: dude,
+    angle: 90,
+    counter: 0,
+};
+
 const char = {
     maxHealth: 20,
     health: 20,
@@ -47,6 +100,7 @@ const char = {
     fireSpeed: 15,
     counter: 0,
     damage: 1,
+    bulletSpeed: 25,
 }
 
 document.addEventListener("keydown", (e) => {
@@ -165,7 +219,7 @@ function updatePlayerCombat(){
     if(char.counter >= char.fireSpeed && pAttack){
         char.counter = 0;
         const p = player.getBoundingClientRect()
-        firePlayerBullet(p.x+p.width/2, p.y+p.height/2, 15, playerAngle, dx, dy);
+        firePlayerBullet(p.x+p.width/2, p.y+p.height/2, char.bulletSpeed, playerAngle, dx, dy);
     } else {
         char.counter ++;
     }
@@ -173,6 +227,7 @@ function updatePlayerCombat(){
 }
 
 function parseEnemeies(){
+    doBoss();
     doTurrets((x+12.5), screenY-(y+12.5));
 }
 
@@ -224,7 +279,9 @@ function movePlayer(){
     y += dy;
     player.style.left = `${x}px`;
     player.style.bottom = `${y}px`;
-    // txt.innerHTML = `(${x}, ${y})`
+    if(char.health>0){
+        txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
+    }
 }
 
 const getNextEnumItem = (enumeration, currentItem) => {
@@ -259,6 +316,7 @@ function doTurrets(targetX, targetY){
         if(tur.health<=0){
             turretList.splice(turretList.indexOf(tur), 1);
             tur.element.parentNode.remove();
+            score += 20;d
             continue;
         }
         const tint = tur.element.nextElementSibling;
@@ -295,12 +353,64 @@ function doTurrets(targetX, targetY){
     
             if(tur.counter>tur.reload && Math.abs(targetAngle - tur.angle) < 5){
                 tur.counter = -8;
-                fireEnemyBullet(divCenterX, divCenterY, 15, tur.angle);
+                fireEnemyBullet(divCenterX, divCenterY, 20, tur.angle);
             } else {
                 tur.counter ++;
             }
         }
     };
+}
+
+function doBoss(){
+    const elm = boss1.element;
+    const rect = elm.getBoundingClientRect();
+    
+    const divCenterX = rect.left + rect.width / 2;
+    const divCenterY = rect.top + rect.height / 2;
+    
+    const deltaX = (x + playerSize / 2) - divCenterX;
+    const deltaY = (screenY - (y + playerSize / 2)) - (divCenterY);
+    
+    let targetAngle = normalizeAngle(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
+
+    const currentAngle = normalizeAngle(boss1.angle);
+
+    targetAngle += (currentAngle - (currentAngle % 360));
+    if((targetAngle-currentAngle) > 180){
+        targetAngle-=360;
+    } else if ((currentAngle-targetAngle) > 180){
+        targetAngle+=360;
+    }
+
+    if(Math.abs(targetAngle - currentAngle) > boss1.state.turnSpeed){
+        boss1.angle = currentAngle + Math.min(boss1.state.turnSpeed, Math.max(-boss1.state.turnSpeed, targetAngle - currentAngle));
+    } else {
+        boss1.angle = targetAngle;
+    }
+    elm.style.transform = `translate(-50%, -50%) rotate(${boss1.angle}deg)`
+
+    elm.style.left = `${boss1.x}px`
+    elm.style.bottom = `${boss1.y}px`
+    moveBoss(divCenterX, divCenterY);
+}
+
+function moveBoss(bossX, bossY){
+    const distToPlayer = Math.hypot((Math.abs(bossY-(screenY - (y+playerSize/2)))),(bossX-(screenX - (x+playerSize/2))));
+    // console.log(distToPlayer);
+    if(distToPlayer>boss1.state.idealDistance){
+        console.log('get closer');
+    } else if(distToPlayer<boss1.state.idealDistance){
+        console.log('back up');
+    }
+
+    if(boss1.state.lowerDistance && (distToPlayer<boss1.state.lowerDistance)){
+        console.log('s');
+        boss1.state = boss1.state.tooClose;
+    }
+
+    // if(){
+
+    // }
 }
 
 function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 5, dx = 0, dy = 0) {
@@ -343,6 +453,31 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 
             dy /= 1.2;
         },
     };
+}
+
+function createTurret(){
+    const turt = document.createElement('div');
+    turt.className = 'turret';
+
+    const turret = document.createElement('div');
+    turret.className = 'autoTurret';
+    turret.appendChild(turt);
+
+    const tint = document.createElement('div');
+    tint.className = 'tint';
+
+    const container = document.createElement('div');
+    container.className = 'turretContainer';
+    container.style.left = `${(Math.round(Math.random()*screenX))}px`;
+    container.style.top = `${(Math.round(Math.random()*screenY))}px`;
+    container.appendChild(turret);
+    container.appendChild(tint);
+
+    document.body.appendChild(container);
+
+    turretList.push(new Turt(10, turret, 0, 4, 15, 0));
+    // turrets.push(container);
+    turrets = document.getElementsByClassName('autoTurret');
 }
 
 function checkRemoveAttack(attack, check = true){
@@ -410,12 +545,17 @@ function firePlayerBullet(x, y, speed, angle, dx, dy){
     playerAttacks.push(bullet);
 }
 
-setInterval(() => {
-    gameplay();
-}, 25);
-
 function start(){
+    startScreen.style.display = 'none';
+    startTime = performance.now();
     setUpTurrets();
+    setInterval(() => {
+        gameplay();
+    }, 25);
+    
+    // setInterval(() => {
+    //     createTurret();
+    // }, 5000);
 }
 
 function updateAttacks(){

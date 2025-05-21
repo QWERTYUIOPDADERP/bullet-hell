@@ -6,27 +6,40 @@
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body onload="start()">
+<body>
+    <section id="start">
+        <div id="title">
+            <h1>A random bullet hell game</h1>
+            <p id="slantText">BETA</p>
+        </div>
+        <button onclick="start()">Start</button>
+    </section>
     <h1 id="testingText"></h1>
     <div id="player" class="block"></div>
+    <div id="boss">
+        <p id="bossFace">
+            >:(
+            </p>
+        </div>
+    </div>
+        <!-- <div id="testBoss" class="turretContainer">
+            <div class="autoTurret">
+                <div class="turret"></div>
+            </div>
+            <div class="tint"></div>
+        </div>
+        <div id="otherTurret" class="turretContainer">
+            <div class="autoTurret">
+                <div class="turret"></div>
+            </div>
+            <div class="tint"></div>
+        </div>
+        <div id="otherOtherTurret" class="turretContainer">
+            <div class="autoTurret">
+                <div class="turret"></div>
+            </div>
+            <div class="tint"></div>
+        </div> -->
     <script src="app.js"></script>
-    <div id="testBoss" class="turretContainer">
-        <div class="autoTurret">
-            <div class="turret"></div>
-        </div>
-        <div class="tint"></div>
-    </div>
-    <div id="otherTurret" class="turretContainer">
-        <div class="autoTurret">
-            <div class="turret"></div>
-        </div>
-        <div class="tint"></div>
-    </div>
-    <div id="otherOtherTurret" class="turretContainer">
-        <div class="autoTurret">
-            <div class="turret"></div>
-        </div>
-        <div class="tint"></div>
-    </div>
 </body>
 </html>
