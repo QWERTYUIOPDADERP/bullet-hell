@@ -33,11 +33,10 @@ const enemyStates = {
         type: 'normalFar', 
         moveSpeed: 2,
         turnSpeed: 10, 
-        attack: ()=> createTurret(),
-        reload: 20,
+        attack: () => createTurret(),
+        reload: 200,
         idealDistance: 300,
         lowerDistance: 150,
-        tooClose: ()=>enemyStates.find(obj => obj.type === 'normalClose'),
     },
     defaultClose: {
         type: 'normalClose', 
@@ -47,10 +46,12 @@ const enemyStates = {
         reload: 15,
         idealDistance: 80,
         upperDistance: 200,
-        tooFar: this.defaultFar,
     },
     // speedy: {type: 'fast', speed: 4, color: "red"}
 };
+
+enemyStates.defaultFar.tooClose = enemyStates.defaultClose;
+enemyStates.defaultClose.tooFar = enemyStates.defaultFar;
 
 let mouseX = 0;
 let mouseY = 0;
@@ -84,7 +85,7 @@ function Boss(x, y, health, element, angle, counter) {
 
 const boss1 = {
     x: screenX/2,
-    y: screenY/2,
+    y: 2*screenY/3,
     state: enemyStates.defaultFar,
     health: 25,
     maxHealth: 25,
@@ -227,7 +228,7 @@ function updatePlayerCombat(){
 }
 
 function parseEnemeies(){
-    doBoss();
+    doBoss(boss1);
     doTurrets((x+12.5), screenY-(y+12.5));
 }
 
@@ -316,7 +317,7 @@ function doTurrets(targetX, targetY){
         if(tur.health<=0){
             turretList.splice(turretList.indexOf(tur), 1);
             tur.element.parentNode.remove();
-            score += 20;d
+            score += 20;
             continue;
         }
         const tint = tur.element.nextElementSibling;
@@ -361,56 +362,81 @@ function doTurrets(targetX, targetY){
     };
 }
 
-function doBoss(){
-    const elm = boss1.element;
-    const rect = elm.getBoundingClientRect();
-    
-    const divCenterX = rect.left + rect.width / 2;
-    const divCenterY = rect.top + rect.height / 2;
-    
-    const deltaX = (x + playerSize / 2) - divCenterX;
-    const deltaY = (screenY - (y + playerSize / 2)) - (divCenterY);
-    
-    let targetAngle = normalizeAngle(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
-
-    const currentAngle = normalizeAngle(boss1.angle);
-
-    targetAngle += (currentAngle - (currentAngle % 360));
-    if((targetAngle-currentAngle) > 180){
-        targetAngle-=360;
-    } else if ((currentAngle-targetAngle) > 180){
-        targetAngle+=360;
-    }
-
-    if(Math.abs(targetAngle - currentAngle) > boss1.state.turnSpeed){
-        boss1.angle = currentAngle + Math.min(boss1.state.turnSpeed, Math.max(-boss1.state.turnSpeed, targetAngle - currentAngle));
+function doBoss(b){
+    if(b.health<=0){
+        score += 100;
+        b.element.remove();
     } else {
-        boss1.angle = targetAngle;
-    }
-    elm.style.transform = `translate(-50%, -50%) rotate(${boss1.angle}deg)`
+        const tint = b.element.children[1];
+        tint.style.backgroundColor = `rgba(255,0,0,${((b.maxHealth-b.health)/b.maxHealth)/2})`;
+        tint.style.transform = 'scale(1)';
+        const elm = b.element;
+        const rect = elm.getBoundingClientRect();
 
-    elm.style.left = `${boss1.x}px`
-    elm.style.bottom = `${boss1.y}px`
-    moveBoss(divCenterX, divCenterY);
+        const divCenterX = rect.left + rect.width / 2;
+        const divCenterY = rect.top + rect.height / 2;
+
+        const deltaX = (x + playerSize / 2) - divCenterX;
+        const deltaY = (screenY - (y + playerSize / 2)) - (divCenterY);
+
+        let targetAngle = normalizeAngle(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
+
+        const currentAngle = normalizeAngle(b.angle);
+
+        targetAngle += (currentAngle - (currentAngle % 360));
+        if((targetAngle-currentAngle) > 180){
+            targetAngle-=360;
+        } else if ((currentAngle-targetAngle) > 180){
+            targetAngle+=360;
+        }
+
+        if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed){
+            b.angle = currentAngle + Math.min(b.state.turnSpeed, Math.max(-b.state.turnSpeed, targetAngle - currentAngle));
+        } else {
+            b.angle = targetAngle;
+        }
+        elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
+
+        elm.style.left = `${b.x}px`
+        elm.style.bottom = `${b.y}px`
+        moveBoss(divCenterX, divCenterY, b);
+        bossAttack(b);
+    }
 }
 
-function moveBoss(bossX, bossY){
-    const distToPlayer = Math.hypot((Math.abs(bossY-(screenY - (y+playerSize/2)))),(bossX-(screenX - (x+playerSize/2))));
-    // console.log(distToPlayer);
-    if(distToPlayer>boss1.state.idealDistance){
-        console.log('get closer');
-    } else if(distToPlayer<boss1.state.idealDistance){
-        console.log('back up');
+function moveBoss(bossX, bossY, b){
+    switch (b.state.type) {
+        case `normalFar`:
+        case `normalClose`:
+            const distToPlayer = Math.hypot((Math.abs(bossY-(screenY - (y+playerSize/2)))),(bossX-((x+playerSize/2))));
+            if(distToPlayer-b.state.idealDistance>15){
+                b.x += b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
+                b.y -= b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
+            } else if(b.state.idealDistance-distToPlayer>15){
+                b.x -= b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
+                b.y += b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
+            }
+            if(b.state.lowerDistance && (distToPlayer<b.state.lowerDistance)){
+                b.state = b.state.tooClose;
+            }
+            
+            if(b.state.upperDistance && (distToPlayer>b.state.upperDistance)){
+                b.state = b.state.tooFar;
+            }
+            
+            break;
+    
+        default:
+            break;
     }
+    b.counter++;
+}
 
-    if(boss1.state.lowerDistance && (distToPlayer<boss1.state.lowerDistance)){
-        console.log('s');
-        boss1.state = boss1.state.tooClose;
+function bossAttack(b){
+    if(b.counter>b.state.reload){
+        b.state.attack();
+        b.counter = 0;
     }
-
-    // if(){
-
-    // }
 }
 
 function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 5, dx = 0, dy = 0) {
@@ -496,18 +522,23 @@ function checkRemoveAttack(attack, check = true){
     }
 
     if(check){
-        if(checkRectCollision(attack.element, player)){
+        if(satCollision(attack.element, attack.angle, player, playerAngle)){
             removeAttack(attack);
             char.health -= attack.damage;
         }
     } else {
         for (let turt of turretList){
-            if(checkRectCollision(attack.element, turt.element)){
+            // console.log(satCollision(attack, turt));
+            if(satCollision(attack.element, attack.angle, turt.element, turt.angle)){
                 removePlayerAttack(attack);
                 turt.health -= attack.damage;
                 break;
             }
         };
+        if(satCollision(attack.element, attack.angle, boss1.element, boss1.angle)){
+            removePlayerAttack(attack);
+            boss1.health -= attack.damage;
+        }
     }
 }
 
@@ -565,4 +596,81 @@ function updateAttacks(){
     playerAttacks.forEach(attack => {
         attack.playerUpdate();
     });
+}
+
+function getRectVertices(x, y, width, height, angle = 0) {
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    const hw = width / 2;
+    const hh = height / 2;
+
+    // corners relative to center
+    const corners = [
+        { x: -hw, y: -hh },
+        { x: hw, y: -hh },
+        { x: hw, y: hh },
+        { x: -hw, y: hh }
+    ];
+
+    // rotate and translate
+    return corners.map(p => ({
+        x: cx + p.x * cos - p.y * sin,
+        y: cy + p.x * sin + p.y * cos
+    }));
+}
+
+function getAxes(vertices) {
+    const axes = [];
+    for (let i = 0; i < vertices.length; i++) {
+        const p1 = vertices[i];
+        const p2 = vertices[(i + 1) % vertices.length];
+        const edge = { x: p2.x - p1.x, y: p2.y - p1.y };
+        const normal = { x: -edge.y, y: edge.x }; // perpendicular
+        // Normalize
+        const len = Math.hypot(normal.x, normal.y);
+        axes.push({ x: normal.x / len, y: normal.y / len });
+    }
+    return axes;
+}
+
+function project(vertices, axis) {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const p of vertices) {
+        const dot = p.x * axis.x + p.y * axis.y;
+        min = Math.min(min, dot);
+        max = Math.max(max, dot);
+    }
+    return { min, max };
+}
+
+function isOverlap(proj1, proj2) {
+    return proj1.max >= proj2.min && proj2.max >= proj1.min;
+}
+
+function satCollision(bElm, bAng, tElm, tAng) {
+    const rect1 = bElm.getBoundingClientRect();
+    const rect2 = tElm.getBoundingClientRect();
+
+    const verts1 = getRectVertices(rect1.left, rect1.top, rect1.width, rect1.height, bAng);
+    const verts2 = getRectVertices(rect2.left, rect2.top, rect2.width, rect2.height, tAng);
+    
+    const axes1 = getAxes(verts1);
+    const axes2 = getAxes(verts2);
+    
+    const axes = axes1.concat(axes2);
+
+    for (const axis of axes) {
+        const proj1 = project(verts1, axis);
+        const proj2 = project(verts2, axis);
+
+        if (!isOverlap(proj1, proj2)) {
+            return false; // Separating axis found — no collision
+        }
+    }
+    return true; // All projections overlap — collision!
 }
