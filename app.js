@@ -9,6 +9,7 @@ let x = screenX/2 - playerSize/2;
 let y = screenY/2 - playerSize/2;
 let playerAngle = 0;
 let score = 0;
+let dashTimeout;
 // 0 = up
 // 1 = left
 // 2 = right
@@ -29,12 +30,79 @@ const playerStates = {
 };
 
 const enemyStates = {
+    defaultTooFar: {
+        type: 'normalTooFar', 
+        moveSpeed: 6,
+        turnSpeed: 8, 
+        ableToMove: true,
+        attacks: {
+            dash: {
+                counter: 0,
+                reload: 30,
+                function: (entity) => bossDash(entity),
+            },
+            strong: {
+                counter: 0,
+                reload: 100,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15),
+            },
+            gatling1: {
+                counter: 0,
+                reload: 20,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 18, angle, 8, 5),
+            },
+            gatling2: {
+                counter: -10,
+                reload: 20,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18, angle+25, 8, 5),
+            },
+            gatling3: {
+                counter: -10,
+                reload: 20,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18, angle-25, 8, 5),
+            },
+            summonTurret: {
+                counter: 0,
+                reload: 190,
+                function: () => createTurret(),
+            }
+        },
+        idealDistance: 300,
+        lowerDistance: 320,
+    },
     defaultFar: {
         type: 'normalFar', 
         moveSpeed: 2,
-        turnSpeed: 10, 
-        attack: () => createTurret(),
-        reload: 200,
+        turnSpeed: 4, 
+        attacks: {
+            strong: {
+                counter: 0,
+                reload: 100,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15),
+            },
+            gatling1: {
+                counter: 0,
+                reload: 20,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 18, angle, 8, 5),
+            },
+            gatling2: {
+                counter: -10,
+                reload: 20,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18, angle+25, 8, 5),
+            },
+            gatling3: {
+                counter: -10,
+                reload: 20,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18, angle-25, 8, 5),
+            },
+            summonTurret: {
+                counter: 0,
+                reload: 190,
+                function: () => createTurret(),
+            }
+
+        },
+        upperDistance: 480,
         idealDistance: 300,
         lowerDistance: 150,
     },
@@ -51,7 +119,9 @@ const enemyStates = {
 };
 
 enemyStates.defaultFar.tooClose = enemyStates.defaultClose;
+enemyStates.defaultFar.tooFar = enemyStates.defaultTooFar;
 enemyStates.defaultClose.tooFar = enemyStates.defaultFar;
+enemyStates.defaultTooFar.tooClose = enemyStates.defaultFar;
 
 let mouseX = 0;
 let mouseY = 0;
@@ -84,14 +154,14 @@ function Boss(x, y, health, element, angle, counter) {
 }
 
 const boss1 = {
+    inPlayer: false,
     x: screenX/2,
     y: 2*screenY/3,
     state: enemyStates.defaultFar,
-    health: 25,
-    maxHealth: 25,
+    health: 40,
+    maxHealth: 40,
     element: dude,
     angle: 90,
-    counter: 0,
 };
 
 const char = {
@@ -364,15 +434,21 @@ function doTurrets(targetX, targetY){
 
 function doBoss(b){
     if(b.health<=0){
-        score += 100;
-        b.element.remove();
+        if(b.state != 'dead'){
+            const h = b.element.nextElementSibling;
+            score += 100;
+            b.state = 'dead';
+            h.remove();
+            b.element.remove();
+        }
     } else {
         const tint = b.element.children[1];
-        tint.style.backgroundColor = `rgba(255,0,0,${((b.maxHealth-b.health)/b.maxHealth)/2})`;
+        const percent = ((b.maxHealth-b.health)/b.maxHealth)/2;
+        tint.style.backgroundColor = `rgba(255,0,0,${percent})`;
         tint.style.transform = 'scale(1)';
         const elm = b.element;
         const rect = elm.getBoundingClientRect();
-
+        
         const divCenterX = rect.left + rect.width / 2;
         const divCenterY = rect.top + rect.height / 2;
 
@@ -390,25 +466,42 @@ function doBoss(b){
             targetAngle+=360;
         }
 
-        if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed){
-            b.angle = currentAngle + Math.min(b.state.turnSpeed, Math.max(-b.state.turnSpeed, targetAngle - currentAngle));
+        if(!(b.state.ableToMove === false)){
+            if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed){
+                b.angle = currentAngle + Math.min(b.state.turnSpeed, Math.max(-b.state.turnSpeed, targetAngle - currentAngle));
+            } else {
+                b.angle = targetAngle;
+            }
+            elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
         } else {
-            b.angle = targetAngle;
+            if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed/10){
+                b.angle = currentAngle + Math.min(b.state.turnSpeed/10, Math.max(-b.state.turnSpeed/10, targetAngle - currentAngle));
+            } else {
+                b.angle = targetAngle;
+            }
+            elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
         }
-        elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
 
         elm.style.left = `${b.x}px`
         elm.style.bottom = `${b.y}px`
+
+        const health = b.element.nextElementSibling;
+        health.style.left = `${rect.left}px`;
+        health.style.top = `${rect.top-rect.height*0.5}px`;
+        
+        // health.style.background = `linear-gradient(90deg, rgb(0, 255, 0) 0%, rgb(0, 255, 0) ${(1-percent*2)*100}%, rgb(255, 0, 0) ${(1-percent*2)*100}%, rgb(255, 0, 0) 100%)`;
+        health.style.background = `linear-gradient(90deg, rgb(0, 255, 0) ${(1-percent*2)*100}%, rgb(255, 0, 0) ${(1-percent*2)*100}%`;
+
         moveBoss(divCenterX, divCenterY, b);
-        bossAttack(b);
+        bossAttack(b, divCenterX, divCenterY);
     }
 }
 
 function moveBoss(bossX, bossY, b){
+    const distToPlayer = Math.hypot((Math.abs(bossY-(screenY - (y+playerSize/2)))),(bossX-((x+playerSize/2))));
     switch (b.state.type) {
         case `normalFar`:
         case `normalClose`:
-            const distToPlayer = Math.hypot((Math.abs(bossY-(screenY - (y+playerSize/2)))),(bossX-((x+playerSize/2))));
             if(distToPlayer-b.state.idealDistance>15){
                 b.x += b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
                 b.y -= b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
@@ -423,7 +516,51 @@ function moveBoss(bossX, bossY, b){
             if(b.state.upperDistance && (distToPlayer>b.state.upperDistance)){
                 b.state = b.state.tooFar;
             }
-            
+            break;
+        case `normalTooFar`:
+            if(b.state.ableToMove){
+                const dash = b.state.attacks.dash;
+                const percent = (100*(1-(dash.reload-dash.counter)/dash.reload))
+                if(dash.counter >= 0){
+                    b.element.style.background = `rgb(${73+percent}, ${0+percent}, ${130+percent})`;
+                } else {
+                    b.element.style.background = `rgb(73, 0, 130)`;
+                }
+                if(distToPlayer-b.state.idealDistance>15){
+                    b.x += b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
+                    b.y -= b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
+                } else if(b.state.idealDistance-distToPlayer>15){
+                    b.x -= b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
+                    b.y += b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
+                }
+                if(b.state.lowerDistance && (distToPlayer<b.state.lowerDistance)){
+                    b.state = b.state.tooClose;
+                }
+                
+                if(b.state.upperDistance && (distToPlayer>b.state.upperDistance)){
+                    b.state = b.state.tooFar;
+                }
+            } else {
+                if(!b.inPlayer && (satCollision(b.element, b.angle, player, player.angle))){
+                    b.inPlayer = true;
+                    char.health -= 5;
+                    console.log('damaging');
+                } else if (!satCollision(b.element, b.angle, player, player.angle)){
+                    b.inPlayer = false;
+                }
+                b.x += b.state.moveSpeed * 14 * Math.cos(b.angle/180*Math.PI);
+                b.y -= b.state.moveSpeed * 14 * Math.sin(b.angle/180*Math.PI);
+                const rect = b.element.getBoundingClientRect();
+                const isOffScreen = (
+                    rect.bottom < 0 ||
+                    rect.right < 0 ||
+                    rect.top > (window.innerHeight || document.documentElement.clientHeight) ||
+                    rect.left > (window.innerWidth || document.documentElement.clientWidth)
+                );
+                if(isOffScreen){
+                    b.state.ableToMove = true;
+                }
+            }
             break;
     
         default:
@@ -432,10 +569,51 @@ function moveBoss(bossX, bossY, b){
     b.counter++;
 }
 
-function bossAttack(b){
-    if(b.counter>b.state.reload){
-        b.state.attack();
-        b.counter = 0;
+function bossAttack(b, centerX, centerY){
+    const attacks = b.state.attacks;
+    switch (b.state.type) {
+        case `normalFar`:
+            for(const attack in attacks){
+                if(attacks[attack].counter>attacks[attack].reload){
+                    attacks[attack].function(centerX, centerY, b.angle);
+                    attacks[attack].counter = 0;
+                } else {
+                    attacks[attack].counter ++;
+                }
+            }
+            
+            break;
+        case `normalClose`:
+            if(b.counter>b.state.reload){
+                // b.state.attack();
+                b.counter = 0;
+            }
+            break;
+        case `normalTooFar`:
+            const dash = attacks['dash']
+            for(const attack in attacks){
+                if(attacks[attack] === dash){
+                    console.log('ye')
+                    if(dash.counter>dash.reload){
+                        dash.function(b);
+                        dash.counter = -40;
+                    } else if (b.state.ableToMove){
+                        dash.counter ++;
+                    }
+                } else if ((dash.counter <= (dash.reload-5)) && b.state.ableToMove){
+                    if(attacks[attack].counter>attacks[attack].reload){
+                        attacks[attack].function(centerX, centerY, b.angle);
+                        attacks[attack].counter = 0;
+                        
+                    } else {
+                        attacks[attack].counter ++;
+                    }
+                }
+            }
+            break;
+    
+        default:
+            break;
     }
 }
 
@@ -566,8 +744,8 @@ function checkRectCollision(div1, div2) {
     return touching;
   }
 
-function fireEnemyBullet(x, y, speed, angle){
-    const bullet = createBullet(x, y, speed, angle);
+function fireEnemyBullet(x, y, speed, angle, radius = 8, damage){
+    const bullet = createBullet(x, y, speed, angle, `black`, radius, damage);
     enemyAttacks.push(bullet);
 }
 
@@ -583,10 +761,6 @@ function start(){
     setInterval(() => {
         gameplay();
     }, 25);
-    
-    // setInterval(() => {
-    //     createTurret();
-    // }, 5000);
 }
 
 function updateAttacks(){
@@ -608,7 +782,7 @@ function getRectVertices(x, y, width, height, angle = 0) {
     const hw = width / 2;
     const hh = height / 2;
 
-    // corners relative to center
+
     const corners = [
         { x: -hw, y: -hh },
         { x: hw, y: -hh },
@@ -616,7 +790,7 @@ function getRectVertices(x, y, width, height, angle = 0) {
         { x: -hw, y: hh }
     ];
 
-    // rotate and translate
+
     return corners.map(p => ({
         x: cx + p.x * cos - p.y * sin,
         y: cy + p.x * sin + p.y * cos
@@ -629,8 +803,8 @@ function getAxes(vertices) {
         const p1 = vertices[i];
         const p2 = vertices[(i + 1) % vertices.length];
         const edge = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const normal = { x: -edge.y, y: edge.x }; // perpendicular
-        // Normalize
+        const normal = { x: -edge.y, y: edge.x };
+
         const len = Math.hypot(normal.x, normal.y);
         axes.push({ x: normal.x / len, y: normal.y / len });
     }
@@ -669,8 +843,17 @@ function satCollision(bElm, bAng, tElm, tAng) {
         const proj2 = project(verts2, axis);
 
         if (!isOverlap(proj1, proj2)) {
-            return false; // Separating axis found — no collision
+            return false;
         }
     }
-    return true; // All projections overlap — collision!
+    return true;
+}
+
+function bossDash(b){
+    b.state.ableToMove = false;
+    dashTimeout = setTimeout(() => {
+        if(!b.state.ableToMove){
+            b.state.ableToMove = true;
+        }
+    }, 450);
 }

@@ -150,3 +150,10 @@ body{
 #bossFace::selection{
     background: none;
 }
+
+.health{
+    width: 50px;
+    height: 10px;
+    position: absolute;
+    /* transition: background 300ms; */
+}
