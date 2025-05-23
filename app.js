@@ -114,10 +114,16 @@ const enemyStates = {
         type: 'normalClose', 
         moveSpeed: 3,
         turnSpeed: 10,  
-        attack: ()=> console.log('toDO'),
-        reload: 15,
-        idealDistance: 80,
-        upperDistance: 200,
+        attacks: {
+            punch: {
+                counter: 0,
+                reload: 100,
+                function: (boss, fist, attack) => melee(boss, fist, attack),
+                state: 0,
+            },
+        },
+        idealDistance: 50,
+        upperDistance: 150,
     },
     // speedy: {type: 'fast', speed: 4, color: "red"}
 };
@@ -148,8 +154,6 @@ function Boss(x, y, health, element, angle, counter) {
     this.x = x;
     this.y = y;
     this.state = enemyStates.defaultFar;
-    // this.dx = dx;
-    // this.dy = dy;
     this.health = health;
     this.maxHealth = health;
     this.element = element;
@@ -646,9 +650,28 @@ function bossAttack(b, centerX, centerY){
             
             break;
         case `normalClose`:
-            if(b.counter>b.state.reload){
-                // b.state.attack();
-                b.counter = 0;
+            const fist = b.element.children[2];
+            const punch = attacks['punch']
+            for(const attack in attacks){
+                if(attacks[attack] === punch){
+                    if(fist.style.opacity != 0){
+                        if((attacks[attack].hit !== 1) && satCollision(fist, b.angle, player, playerAngle)){
+                            attacks[attack].hit = 1;
+                            char.health -= 5;
+                        }
+                    }
+                    if(punch.counter>punch.reload){
+                        punch.function(b, fist, attacks[attack]);
+                        punch.counter = 0;
+                    } else {
+                        punch.counter ++;
+                    }
+                } else if(attacks[attack].counter>attacks[attack].reload){
+                    // attacks[attack].function(centerX, centerY, b.angle);
+                    // attacks[attack].counter = 0;
+                } else {
+                    // attacks[attack].counter ++;
+                }
             }
             break;
         case `normalTooFar`:
@@ -994,4 +1017,30 @@ function bossDash(b){
             b.state.ableToMove = true;
         }
     }, 450);
+}
+
+function melee(b, f, a){
+    const elm = b.element;
+    const rect = elm.getBoundingClientRect();
+    
+    const divCenterX = rect.left + rect.width / 2;
+    const divCenterY = rect.top + rect.height / 2;
+
+    if(a.state === 0){
+        a.state = 1;
+        f.style.top = `-100%`
+        f.classList.toggle('punchRight');
+        // f.style.bottom = ``
+    } else {
+        a.state = 0;
+        f.style.top = `200%`
+        f.classList.toggle('punchLeft');
+        // f.style.bottom = `100%`
+    }
+    f.style.opacity = `1`;
+    setTimeout(() => {
+        f.className = `fist`;
+        f.style.opacity = `0`;
+        a.hit = 0;
+    }, 1000);
 }

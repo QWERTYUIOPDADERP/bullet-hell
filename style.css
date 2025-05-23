@@ -208,3 +208,49 @@ body{
     right: 20px;
     top: 20px;
 }
+
+.fist{
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    background: rgb(73, 0, 130);
+    transform: translate(-50%, -50%);
+    border: black 3px solid;
+    box-shadow: 0 0 10px 2px black;
+    left: 50%;
+    opacity: 0;
+}
+
+@keyframes punchLeft {
+    /* 0% {
+    } */
+    50% {
+        top: 50%;
+        left: 250%;
+    }
+    100% {
+        top: 200%;
+        left: 50%;
+    }
+}
+
+@keyframes punchRight {
+    /* 0% {
+    } */
+    50% {
+        top: 50%;
+        left: 250%;
+    }
+    100% {
+        top: -100%;
+        left: 50%;
+    }
+}
+
+.punchLeft{
+    animation: punchLeft 1000ms;
+}
+
+.punchRight{
+    animation: punchRight 1000ms;
+}
