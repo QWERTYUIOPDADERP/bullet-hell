@@ -176,8 +176,8 @@ const char = {
     counter: 0,
     damage: 1,
     bulletSpeed: 25,
-    stamina: 100,
-    maxStamina: 100,
+    stamina: 200,
+    maxStamina: 200,
 }
 
 document.addEventListener("keydown", (e) => {
@@ -374,7 +374,7 @@ function movePlayer(){
                 if(char.health>0){
                     txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
                 }
-                char.stamina -= 5;
+                char.stamina -= 10;
             } else {
                 setPlayerState(playerStates.default);
             }
@@ -422,9 +422,9 @@ function togglePlayerMode(num){
 }
 
 function setPlayerState(state){
-    console.log('not switching')
+    // console.log('not switching')
     if(char.state.type !== state.type){
-        console.log('switching')
+        // console.log('switching')
         char.state = state;
         setPlayer(char.state);
     }
@@ -602,7 +602,7 @@ function moveBoss(bossX, bossY, b){
                 if(!b.inPlayer && (satCollision(b.element, b.angle, player, player.angle))){
                     b.inPlayer = true;
                     char.health -= 5;
-                    console.log('damaging');
+                    // console.log('damaging');
                 } else if (!satCollision(b.element, b.angle, player, player.angle)){
                     b.inPlayer = false;
                 }
@@ -610,13 +610,17 @@ function moveBoss(bossX, bossY, b){
                 b.y -= b.state.moveSpeed * 14 * Math.sin(b.angle/180*Math.PI);
                 const rect = b.element.getBoundingClientRect();
                 const isOffScreen = (
-                    rect.bottom < 0 ||
-                    rect.right < 0 ||
-                    rect.top > (window.innerHeight || document.documentElement.clientHeight) ||
-                    rect.left > (window.innerWidth || document.documentElement.clientWidth)
+                    rect.top < 0 ||
+                    rect.left < 0 ||
+                    rect.bottom > (window.innerHeight || document.documentElement.clientHeight) ||
+                    rect.right > (window.innerWidth || document.documentElement.clientWidth)
                 );
                 if(isOffScreen){
+                    // console.log('correcting');
                     b.state.ableToMove = true;
+                    // b.angle = normalizeAngle(b.angle+180);
+                    b.x -= b.state.moveSpeed * 20 * Math.cos(b.angle/180*Math.PI);
+                    b.y += b.state.moveSpeed * 20 * Math.sin(b.angle/180*Math.PI);
                 }
             }
             break;
@@ -651,7 +655,7 @@ function bossAttack(b, centerX, centerY){
             const dash = attacks['dash']
             for(const attack in attacks){
                 if(attacks[attack] === dash){
-                    console.log('ye')
+                    // console.log('ye')
                     if(dash.counter>dash.reload){
                         dash.function(b);
                         dash.counter = -40;
@@ -705,8 +709,8 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 
             this.element.style.height = `${radius*2}px`;
         },
         playerUpdate: function() {
-            console.log(this.x);
-            console.log(this.y);
+            // console.log(this.x);
+            // console.log(this.y);
             checkRemoveAttack(this, false);
 
             this.x += this.speed * Math.cos(this.angle/180*Math.PI) + dx/1.8;
@@ -759,7 +763,7 @@ function checkRemoveAttack(attack, check = true){
     if (isOffScreen && check) {
         removeAttack(attack)
     } else if (isOffScreen && !check){
-        console.log(rect)
+        // console.log(rect)
         removePlayerAttack(attack)
     }
 
