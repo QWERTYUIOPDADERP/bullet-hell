@@ -9,11 +9,19 @@
 <body>
     <section id="start">
         <div id="title">
-            <h1>A random bullet hell game</h1>
+            <h1>A random really hard bullet hell game</h1>
             <p id="slantText">Pre-ALPHA</p>
         </div>
-        <button onclick="start()">START</button>
+        <div class="column">
+            <button onclick="start()">START</button>
+            <button onclick="tutorial()">TUTORIAL</button>
+        </div>
     </section>
+    <section id="tutorial">
+        <h1 id="tutorialText"></h1>
+        <button id="tutorialContinue" onclick="tContinue()">Continue</button>
+    </section>
+    <div id="fakePlayer" class="block"></div>
     <h1 id="testingText"></h1>
     <div id="player" class="block"></div>
     <div class="bossContainer">
@@ -25,24 +33,10 @@
         </div>
         <div class="health"></div>
     </div>
-        <!-- <div id="testBoss" class="turretContainer">
-            <div class="autoTurret">
-                <div class="turret"></div>
-            </div>
-            <div class="tint"></div>
-        </div>
-        <div id="otherTurret" class="turretContainer">
-            <div class="autoTurret">
-                <div class="turret"></div>
-            </div>
-            <div class="tint"></div>
-        </div>
-        <div id="otherOtherTurret" class="turretContainer">
-            <div class="autoTurret">
-                <div class="turret"></div>
-            </div>
-            <div class="tint"></div>
-        </div> -->
+    <div id="hud">
+        <div id="pStamina"></div>
+        <div id="pHealth"></div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

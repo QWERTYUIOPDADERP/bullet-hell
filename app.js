@@ -20,13 +20,17 @@ let txt = document.getElementById('testingText');
 let startScreen = document.getElementById('start');
 let dude = document.getElementById('boss');
 
+let hud = document.getElementById('hud');
+let hudStamina = document.getElementById('pStamina');
+let hudHealth = document.getElementById('pHealth');
+
 let startTime = 0;
 
 let turrets = document.getElementsByClassName('autoTurret');
 
 const playerStates = {
     default: {type: 'normal', speed: 2, color: "blue"},
-    speedy: {type: 'fast', speed: 4, color: "red"}
+    speedy: {type: 'fast', speed: 5, color: "red"}
 };
 
 const enemyStates = {
@@ -37,7 +41,7 @@ const enemyStates = {
         ableToMove: true,
         attacks: {
             dash: {
-                counter: 0,
+                counter: -40,
                 reload: 30,
                 function: (entity) => bossDash(entity),
             },
@@ -76,27 +80,27 @@ const enemyStates = {
         turnSpeed: 4, 
         attacks: {
             strong: {
-                counter: 0,
+                counter: -30,
                 reload: 100,
                 function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15),
             },
             gatling1: {
-                counter: 0,
+                counter: -30,
                 reload: 20,
                 function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 18, angle, 8, 5),
             },
             gatling2: {
-                counter: -10,
+                counter: -40,
                 reload: 20,
                 function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18, angle+25, 8, 5),
             },
             gatling3: {
-                counter: -10,
+                counter: -40,
                 reload: 20,
                 function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18, angle-25, 8, 5),
             },
             summonTurret: {
-                counter: 0,
+                counter: -30,
                 reload: 190,
                 function: () => createTurret(),
             }
@@ -172,6 +176,8 @@ const char = {
     counter: 0,
     damage: 1,
     bulletSpeed: 25,
+    stamina: 100,
+    maxStamina: 100,
 }
 
 document.addEventListener("keydown", (e) => {
@@ -202,7 +208,7 @@ document.addEventListener("keydown", (e) => {
             keys[2] = true;
             break;
         case ' ':
-            togglePlayerMode();
+            setPlayerState(playerStates.speedy);
         default:
             break;
     }
@@ -236,6 +242,8 @@ document.addEventListener("keyup", (e) => {
         case 'd':
             keys[2] = false;
             break;
+        case ' ':
+            setPlayerState(playerStates.default);
         default:
             break;
     }
@@ -283,13 +291,23 @@ function gameplay(){
     updatePlayerCombat();
 }
 
+function modifiedGameplay(){
+    calcPlayerMovement(char.state.speed);
+    collide();
+    movePlayer();
+    friction();
+    updatePlayerAngle();
+    updateAttacks();
+    updatePlayerCombat();
+}
+
 function updatePlayerCombat(){
     if(char.health<=0){
         player.remove();
     }
     if(char.counter >= char.fireSpeed && pAttack){
         char.counter = 0;
-        const p = player.getBoundingClientRect()
+        const p = player.getBoundingClientRect();
         firePlayerBullet(p.x+p.width/2, p.y+p.height/2, char.bulletSpeed, playerAngle, dx, dy);
     } else {
         char.counter ++;
@@ -344,15 +362,46 @@ function collide(){
 }
 
 function movePlayer(){
-    screenX = window.innerWidth;
-    // screenY = window.innerHeight;
-    x += dx;
-    y += dy;
-    player.style.left = `${x}px`;
-    player.style.bottom = `${y}px`;
-    if(char.health>0){
-        txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
+    switch (char.state.type) {
+        case "fast":
+            if(char.stamina>0){
+                screenX = window.innerWidth;
+                // screenY = window.innerHeight;
+                x += dx;
+                y += dy;
+                player.style.left = `${x}px`;
+                player.style.bottom = `${y}px`;
+                if(char.health>0){
+                    txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
+                }
+                char.stamina -= 5;
+            } else {
+                setPlayerState(playerStates.default);
+            }
+            break;
+        case 'normal':
+            screenX = window.innerWidth;
+            // screenY = window.innerHeight;
+            x += dx;
+            y += dy;
+            player.style.left = `${x}px`;
+            player.style.bottom = `${y}px`;
+            if(char.health>0){
+                txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
+            }
+            if(char.stamina<char.maxStamina){
+                char.stamina ++;
+            }
+            break;
+        default:
+            break;
     }
+
+    let percent = ((char.maxHealth-char.health)/char.maxHealth);
+    hudHealth.style.background = `linear-gradient(90deg, rgb(0, 255, 0) ${(1-percent)*100}%, rgb(255, 0, 0) ${(1-percent)*100}%`;
+    
+    percent = ((char.maxStamina-char.stamina)/char.maxStamina);
+    hudStamina.style.background = `linear-gradient(90deg, deepskyblue ${(1-percent)*100}%, skyblue ${(1-percent)*100}%`;
 }
 
 const getNextEnumItem = (enumeration, currentItem) => {
@@ -367,9 +416,18 @@ function normalizeAngle(angle) {
     return ((angle % 360) + 360) % 360;
 }
 
-function togglePlayerMode(){
-    char.state = getNextEnumItem(playerStates, char.state);
+function togglePlayerMode(num){
+    char.state = playerStates[num];
     setPlayer(char.state);
+}
+
+function setPlayerState(state){
+    console.log('not switching')
+    if(char.state.type !== state.type){
+        console.log('switching')
+        char.state = state;
+        setPlayer(char.state);
+    }
 }
 
 function setPlayer(state){
@@ -622,6 +680,9 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 
     elm.className = 'bullet'
     document.body.appendChild(elm);
 
+    elm.style.transform = `translate(${x-radius}px, ${y-radius}px) rotate(${angle}deg)`;
+    elm.style.zIndex = `12`;
+
     return {
         element: elm,
         x: x,
@@ -644,6 +705,8 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 
             this.element.style.height = `${radius*2}px`;
         },
         playerUpdate: function() {
+            console.log(this.x);
+            console.log(this.y);
             checkRemoveAttack(this, false);
 
             this.x += this.speed * Math.cos(this.angle/180*Math.PI) + dx/1.8;
@@ -696,6 +759,7 @@ function checkRemoveAttack(attack, check = true){
     if (isOffScreen && check) {
         removeAttack(attack)
     } else if (isOffScreen && !check){
+        console.log(rect)
         removePlayerAttack(attack)
     }
 
@@ -755,12 +819,82 @@ function firePlayerBullet(x, y, speed, angle, dx, dy){
 }
 
 function start(){
+    player = document.getElementById('player');
+    char.element = player;
     startScreen.style.display = 'none';
+    hud.style.display = 'block';
     startTime = performance.now();
     setUpTurrets();
     setInterval(() => {
         gameplay();
     }, 25);
+}
+
+let t = document.getElementById('tutorial');
+let tTxt = document.getElementById('tutorialText');
+let intervalID;
+let tutorialNum;
+
+function tutorial(){
+    tutorialNum = 0;
+    player = document.getElementById('fakePlayer');
+    char.element = player;
+    startScreen.style.display = 'none';
+    hud.style.display = 'block';
+    startTime = performance.now();
+    t.style.display = 'flex';
+    dude.style.left = `-100%`;
+    tTxt.innerHTML = 'Use WASD or Arrow Keys to Move'
+    intervalID = setInterval(() => {
+        modifiedGameplay();
+    }, 25);
+}
+
+function tContinue(){
+    switch (tutorialNum) {
+        case 0:
+            tTxt.innerHTML = 'Aim with the mouse. Click/hold left click to shoot.';
+            break;
+        case 1:
+            tTxt.innerHTML = 'Note that aim is affected by movement.';
+            break;
+        case 2:
+            tTxt.innerHTML = 'Sprint with space.';
+            break;
+        case 3:
+            tTxt.innerHTML = 'The green bar in the lower left is health, the blue is stamina.';
+            break;
+        case 4:
+            tTxt.innerHTML = `That's it for now. Click continue again to return.`;
+            break;
+        case 5:
+            tReturn();
+            break;
+        default:
+            break;
+    }
+    tutorialNum ++;
+}
+
+function tReturn(){
+    dx = 0; 
+    dy = 0;
+    screenX = window.innerWidth;
+    screenY = window.innerHeight;
+    x = screenX/2 - playerSize/2;
+    y = screenY/2 - playerSize/2;
+    playerAngle = 0;
+    score = 0;
+    tutorialNum = 0;
+    player.style.left = `-25%`;
+    player = document.getElementById('player');
+    char.element = player;
+    startScreen.style.display = 'flex';
+    hud.style.display = 'none';
+    startTime = performance.now();
+    t.style.display = 'none';
+    tTxt.innerHTML = '';
+    clearInterval(intervalID);
 }
 
 function updateAttacks(){
