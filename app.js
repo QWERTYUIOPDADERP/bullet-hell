@@ -125,6 +125,214 @@ const enemyStates = {
         idealDistance: 50,
         upperDistance: 150,
     },
+    angySpin: {
+        type: 'angySpin', 
+        moveSpeed: 1,
+        turnSpeed: 80, 
+        bulletSpeed: 10,
+        attacks: {
+            gatling1: {
+                counter: 0,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle, 8, 5),
+            },
+            gatling2: {
+                counter: -3,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+36, 8, 5),
+            },
+            gatling3: {
+                counter: -6,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*2), 8, 5),
+            },
+            gatling4: {
+                counter: -9,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*3), 8, 5),
+            },
+            gatling5: {
+                counter: -12,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*4), 8, 5),
+            },
+            gatling6: {
+                counter: -15,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*5), 8, 5),
+            },
+            gatling7: {
+                counter: -18,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*6), 8, 5),
+            },
+            gatling8: {
+                counter: -21,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*7), 8, 5),
+            },
+            gatling9: {
+                counter: -24,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*8), 8, 5),
+            },
+            gatling10: {
+                counter: -27,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*9), 8, 5),
+            },
+            gatling11: {
+                counter: 0,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+90, 8, 5),
+            },
+            gatling12: {
+                counter: -3,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+36+90, 8, 5),
+            },
+            gatling13: {
+                counter: -6,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*2)+90, 8, 5),
+            },
+            gatling14: {
+                counter: -9,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*3)+90, 8, 5),
+            },
+            gatling15: {
+                counter: -12,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*4)+90, 8, 5),
+            },
+            gatling16: {
+                counter: -15,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*5)+90, 8, 5),
+            },
+            gatling17: {
+                counter: -18,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*6)+90, 8, 5),
+            },
+            gatling18: {
+                counter: -21,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*7)+90, 8, 5),
+            },
+            gatling19: {
+                counter: -24,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*8)+90, 8, 5),
+            },
+            gatling20: {
+                counter: -27,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*9)+90, 8, 5),
+            },
+            gatling21: {
+                counter: 0,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+180, 8, 5),
+            },
+            gatling22: {
+                counter: -3,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36)+180, 8, 5),
+            },
+            gatling23: {
+                counter: -6,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*2)+180, 8, 5),
+            },
+            gatling24: {
+                counter: -9,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*3)+180, 8, 5),
+            },
+            gatling25: {
+                counter: -12,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*4)+180, 8, 5),
+            },
+            gatling26: {
+                counter: -15,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*5)+180, 8, 5),
+            },
+            gatling27: {
+                counter: -18,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*6)+180, 8, 5),
+            },
+            gatling28: {
+                counter: -21,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*7)+180, 8, 5),
+            },
+            gatling29: {
+                counter: -24,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*8)+180, 8, 5),
+            },
+            gatling30: {
+                counter: -27,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*9)+180, 8, 5),
+            },
+            gatling31: {
+                counter: 0,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*0)+270, 8, 5),
+            },
+            gatling32: {
+                counter: -3,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*1)+270, 8, 5),
+            },
+            gatling33: {
+                counter: -6,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*2)+270, 8, 5),
+            },
+            gatling34: {
+                counter: -9,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*3)+270, 8, 5),
+            },
+            gatling35: {
+                counter: -12,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*4)+270, 8, 5),
+            },
+            gatling36: {
+                counter: -15,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*5)+270, 8, 5),
+            },
+            gatling37: {
+                counter: -18,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*6)+270, 8, 5),
+            },
+            gatling38: {
+                counter: -21,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*7)+270, 8, 5),
+            },
+            gatling39: {
+                counter: -24,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*8)+270, 8, 5),
+            },
+            gatling40: {
+                counter: -27,
+                reload: 30,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 3, angle+(36*9)+270, 8, 5),
+            },
+        },
+    },
     // speedy: {type: 'fast', speed: 4, color: "red"}
 };
 
@@ -506,6 +714,9 @@ function doBoss(b){
     } else {
         const tint = b.element.children[1];
         const percent = ((b.maxHealth-b.health)/b.maxHealth)/2;
+        if((1-(percent*2))<0.5){
+            b.state = enemyStates.angySpin;
+        }
         tint.style.backgroundColor = `rgba(255,0,0,${percent})`;
         tint.style.transform = 'scale(1)';
         const elm = b.element;
@@ -517,31 +728,36 @@ function doBoss(b){
         const deltaX = (x + playerSize / 2) - divCenterX;
         const deltaY = (screenY - (y + playerSize / 2)) - (divCenterY);
 
-        let targetAngle = normalizeAngle(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
-
-        const currentAngle = normalizeAngle(b.angle);
-
-        targetAngle += (currentAngle - (currentAngle % 360));
-        if((targetAngle-currentAngle) > 180){
-            targetAngle-=360;
-        } else if ((currentAngle-targetAngle) > 180){
-            targetAngle+=360;
-        }
-
-        if(!(b.state.ableToMove === false)){
-            if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed){
-                b.angle = currentAngle + Math.min(b.state.turnSpeed, Math.max(-b.state.turnSpeed, targetAngle - currentAngle));
-            } else {
-                b.angle = targetAngle;
-            }
-            elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
+        if(b.state.type == `angySpin`){
+            b.angle = normalizeAngle(b.angle+b.state.turnSpeed);
+            elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`;
         } else {
-            if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed/10){
-                b.angle = currentAngle + Math.min(b.state.turnSpeed/10, Math.max(-b.state.turnSpeed/10, targetAngle - currentAngle));
-            } else {
-                b.angle = targetAngle;
+            let targetAngle = normalizeAngle(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
+
+            const currentAngle = normalizeAngle(b.angle);
+
+            targetAngle += (currentAngle - (currentAngle % 360));
+            if((targetAngle-currentAngle) > 180){
+                targetAngle-=360;
+            } else if ((currentAngle-targetAngle) > 180){
+                targetAngle+=360;
             }
-            elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
+
+            if(!(b.state.ableToMove === false)){
+                if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed){
+                    b.angle = currentAngle + Math.min(b.state.turnSpeed, Math.max(-b.state.turnSpeed, targetAngle - currentAngle));
+                } else {
+                    b.angle = targetAngle;
+                }
+                elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
+            } else {
+                if(Math.abs(targetAngle - currentAngle) > b.state.turnSpeed/10){
+                    b.angle = currentAngle + Math.min(b.state.turnSpeed/10, Math.max(-b.state.turnSpeed/10, targetAngle - currentAngle));
+                } else {
+                    b.angle = targetAngle;
+                }
+                elm.style.transform = `translate(-50%, -50%) rotate(${b.angle}deg)`
+            }
         }
 
         elm.style.left = `${b.x}px`
@@ -564,6 +780,22 @@ function moveBoss(bossX, bossY, b){
     switch (b.state.type) {
         case `normalFar`:
         case `normalClose`:
+            if(distToPlayer-b.state.idealDistance>15){
+                b.x += b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
+                b.y -= b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
+            } else if(b.state.idealDistance-distToPlayer>15){
+                b.x -= b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
+                b.y += b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
+            }
+            if(b.state.lowerDistance && (distToPlayer<b.state.lowerDistance)){
+                b.state = b.state.tooClose;
+            }
+            
+            if(b.state.upperDistance && (distToPlayer>b.state.upperDistance)){
+                b.state = b.state.tooFar;
+            }
+            break;
+        case `angySpin`:
             if(distToPlayer-b.state.idealDistance>15){
                 b.x += b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
                 b.y -= b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
@@ -696,7 +928,17 @@ function bossAttack(b, centerX, centerY){
                 }
             }
             break;
-    
+        case `angySpin`:
+            for(const attack in attacks){
+                if(attacks[attack].counter>attacks[attack].reload){
+                    attacks[attack].function(centerX, centerY, b.angle);
+                    attacks[attack].counter = 0;
+                } else {
+                    attacks[attack].counter ++;
+                }
+            }
+            
+            break;
         default:
             break;
     }
@@ -931,6 +1173,24 @@ function updateAttacks(){
     playerAttacks.forEach(attack => {
         attack.playerUpdate();
     });
+    bulletBulletCollision();
+    // bulletBulletCollision(); Too complicated to do interpolation (required b/c too samll and fast)
+}
+
+function bulletBulletCollision(){
+    let pAttack;
+    let eAttack;
+    for (i = 0; i<(playerAttacks.length); i++){
+        pAttack = playerAttacks[i];
+        for (l = 0; l<enemyAttacks.length; l++){
+            eAttack = enemyAttacks[l];
+            if(satCollision(pAttack.element, pAttack.angle, eAttack.element, eAttack.angle)){
+                removePlayerAttack(pAttack);
+                removeAttack(eAttack);
+                // char.health -= attack.damage;
+            }
+        }
+    }
 }
 
 function getRectVertices(x, y, width, height, angle = 0) {
