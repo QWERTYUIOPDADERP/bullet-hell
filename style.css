@@ -193,6 +193,13 @@ body{
     background: lightblue;
 }
 
+#pAbility{
+    width: 150px;
+    height: 8px;
+    background: lightblue;
+    margin-bottom: 2px;
+}
+
 .column{
     display: flex;
     flex-flow: column nowrap;
