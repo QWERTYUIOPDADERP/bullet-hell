@@ -28,6 +28,8 @@ let startTime = 0;
 
 let turrets = document.getElementsByClassName('autoTurret');
 
+let debugMode = false;
+
 const playerStates = {
     default: {type: 'normal', speed: 2, color: "blue"},
     speedy: {type: 'fast', speed: 5, color: "red"}
@@ -128,7 +130,7 @@ const enemyStates = {
     angySpin: {
         type: 'angySpin', 
         moveSpeed: 1,
-        turnSpeed: 80, 
+        turnSpeed: 70, 
         bulletSpeed: 10,
         attacks: {
             gatling1: {
@@ -348,7 +350,7 @@ let turretList = [];
 let enemyAttacks = [];
 let playerAttacks = [];
 
-function Turt(health, element, angle, speed, reload, counter) {
+function Turt(health, element, angle, speed, reload, inX, inY, counter) {
     this.health = health;
     this.maxHealth = health;
     this.element = element;
@@ -356,6 +358,9 @@ function Turt(health, element, angle, speed, reload, counter) {
     this.speed = speed;
     this.reload = reload;
     this.counter = counter;
+    this.size = 50;
+    this.x = inX;
+    this.y = inY;
 }
 
 function Boss(x, y, health, element, angle, counter) {
@@ -378,6 +383,7 @@ const boss1 = {
     maxHealth: 40,
     element: dude,
     angle: 90,
+    size: 50,
 };
 
 const char = {
@@ -390,6 +396,7 @@ const char = {
     bulletSpeed: 25,
     stamina: 200,
     maxStamina: 200,
+    size: 25,
 }
 
 document.addEventListener("keydown", (e) => {
@@ -493,6 +500,9 @@ document.addEventListener('mouseup', function(event) {
 });
 
 function gameplay(){
+    if(debugMode){
+        clearHitboxes();
+    }
     calcPlayerMovement(char.state.speed);
     collide();
     movePlayer();
@@ -504,6 +514,9 @@ function gameplay(){
 }
 
 function modifiedGameplay(){
+    if(debugMode){
+        clearHitboxes();
+    }
     calcPlayerMovement(char.state.speed);
     collide();
     movePlayer();
@@ -835,11 +848,11 @@ function moveBoss(bossX, bossY, b){
                     b.state = b.state.tooFar;
                 }
             } else {
-                if(!b.inPlayer && (satCollision(b.element, b.angle, player, player.angle))){
+                if(!b.inPlayer && (satCollision(b.angle, playerAngle, b.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2))){
                     b.inPlayer = true;
                     char.health -= 5;
                     // console.log('damaging');
-                } else if (!satCollision(b.element, b.angle, player, player.angle)){
+                } else if (!satCollision(b.angle, playerAngle, b.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
                     b.inPlayer = false;
                 }
                 b.x += b.state.moveSpeed * 14 * Math.cos(b.angle/180*Math.PI);
@@ -887,7 +900,7 @@ function bossAttack(b, centerX, centerY){
             for(const attack in attacks){
                 if(attacks[attack] === punch){
                     if(fist.style.opacity != 0){
-                        if((attacks[attack].hit !== 1) && satCollision(fist, b.angle, player, playerAngle)){
+                        if((attacks[attack].hit !== 1) && satCollision(b.angle, playerAngle, b.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
                             attacks[attack].hit = 1;
                             char.health -= 5;
                         }
@@ -964,29 +977,30 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 
         radius: radius,
         color: color,
         update: function() {
-            checkRemoveAttack(this);
-
             this.x += this.speed * Math.cos(this.angle/180*Math.PI);
             this.y += this.speed * Math.sin(this.angle/180*Math.PI);
             this.element.style.transform = `translate(${this.x-this.radius}px, ${this.y-this.radius}px) rotate(${this.angle}deg)`;
             this.element.style.backgroundColor = `${color}`;
             this.element.style.width = `${radius*2}px`;
             this.element.style.height = `${radius*2}px`;
+
+            checkRemoveAttack(this);
         },
         playerUpdate: function() {
             // console.log(this.x);
             // console.log(this.y);
-            checkRemoveAttack(this, false);
-
+            
             this.x += this.speed * Math.cos(this.angle/180*Math.PI) + dx/1.8;
             this.y += this.speed * Math.sin(this.angle/180*Math.PI) - dy/1.8;
             this.element.style.transform = `translate(${this.x-this.radius}px, ${this.y-this.radius}px) rotate(${this.angle}deg)`;
             this.element.style.backgroundColor = `${color}`;
             this.element.style.width = `${radius*2}px`;
             this.element.style.height = `${radius*2}px`;
-
+            
             dx /= 1.2;
             dy /= 1.2;
+
+            checkRemoveAttack(this, false);
         },
     };
 }
@@ -1004,14 +1018,17 @@ function createTurret(){
 
     const container = document.createElement('div');
     container.className = 'turretContainer';
-    container.style.left = `${(Math.round(Math.random()*screenX))}px`;
-    container.style.top = `${(Math.round(Math.random()*screenY))}px`;
+
+    const turtX = (Math.round(Math.random()*screenX))
+    const turtY = (Math.round(Math.random()*screenY))
+    container.style.left = `${turtX}px`;
+    container.style.top = `${turtY}px`;
     container.appendChild(turret);
     container.appendChild(tint);
 
     document.body.appendChild(container);
 
-    turretList.push(new Turt(10, turret, 0, 4, 15, 0));
+    turretList.push(new Turt(10, turret, 0, 4, 15, turtX, turtY, 0));
     // turrets.push(container);
     turrets = document.getElementsByClassName('autoTurret');
 }
@@ -1033,20 +1050,20 @@ function checkRemoveAttack(attack, check = true){
     }
 
     if(check){
-        if(satCollision(attack.element, attack.angle, player, playerAngle)){
+        if(satCollision(attack.angle, playerAngle, attack.radius*2, char.size, attack.x, attack.y, x+char.size/2, screenY-y-char.size/2)){
             removeAttack(attack);
             char.health -= attack.damage;
         }
     } else {
         for (let turt of turretList){
-            // console.log(satCollision(attack, turt));
-            if(satCollision(attack.element, attack.angle, turt.element, turt.angle)){
+            // console.log(turt);
+            if(satCollision(attack.angle, turt.angle, attack.radius*2, turt.size, attack.x, attack.y, turt.x, turt.y)){
                 removePlayerAttack(attack);
                 turt.health -= attack.damage;
                 break;
             }
         };
-        if(satCollision(attack.element, attack.angle, boss1.element, boss1.angle)){
+        if(satCollision(attack.angle, boss1.angle, attack.radius*2, boss1.size, attack.x, attack.y, boss1.x, screenY-boss1.y-boss1.size)){
             removePlayerAttack(attack);
             boss1.health -= attack.damage;
         }
@@ -1184,7 +1201,7 @@ function bulletBulletCollision(){
         pAttack = playerAttacks[i];
         for (l = 0; l<enemyAttacks.length; l++){
             eAttack = enemyAttacks[l];
-            if(satCollision(pAttack.element, pAttack.angle, eAttack.element, eAttack.angle)){
+            if(satCollision(pAttack.angle, eAttack.angle, pAttack.radius*2, eAttack.radius*2, pAttack.x, pAttack.y, eAttack.x, eAttack.y)){
                 removePlayerAttack(pAttack);
                 removeAttack(eAttack);
                 // char.health -= attack.damage;
@@ -1247,12 +1264,19 @@ function isOverlap(proj1, proj2) {
     return proj1.max >= proj2.min && proj2.max >= proj1.min;
 }
 
-function satCollision(bElm, bAng, tElm, tAng) {
-    const rect1 = bElm.getBoundingClientRect();
-    const rect2 = tElm.getBoundingClientRect();
+function satCollision(bAng, tAng, bSize, tSize, bX, bY, tX, tY) {
 
-    const verts1 = getRectVertices(rect1.left, rect1.top, rect1.width, rect1.height, bAng);
-    const verts2 = getRectVertices(rect2.left, rect2.top, rect2.width, rect2.height, tAng);
+    bX -= bSize/2;
+    bY -= bSize/2;
+
+    tX -= tSize/2;
+    tY -= tSize/2;
+
+    bAng *= (Math.PI/180);
+    tAng *= (Math.PI/180);
+
+    const verts1 = getRectVertices(bX, bY, bSize, bSize, bAng);
+    const verts2 = getRectVertices(tX, tY, tSize, tSize, tAng);
     
     const axes1 = getAxes(verts1);
     const axes2 = getAxes(verts2);
@@ -1264,10 +1288,61 @@ function satCollision(bElm, bAng, tElm, tAng) {
         const proj2 = project(verts2, axis);
 
         if (!isOverlap(proj1, proj2)) {
+            if(debugMode){
+                drawHitbox(verts1, 'blue');
+                drawHitbox(verts2, 'blue');
+            }
             return false;
         }
     }
+
+    if(debugMode){
+        drawHitbox(verts1, 'red');
+        drawHitbox(verts2, 'red');
+    }
     return true;
+}
+
+function drawHitbox(vertices, color = 'blue') {
+    let svg = document.getElementById('hitbox-svg');
+    if (!svg) {
+        svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("id", "hitbox-svg");
+        svg.style.position = "fixed";
+        svg.style.top = 0;
+        svg.style.left = 0;
+        svg.style.width = "100%";
+        svg.style.height = "100%";
+        svg.style.pointerEvents = "none"; // allow mouse interaction below
+        svg.style.zIndex = 9999;
+        document.body.appendChild(svg);
+    }
+
+    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    const points = vertices.map(p => `${p.x},${p.y}`).join(' ');
+    polygon.setAttribute('points', points);
+    polygon.setAttribute('stroke', color);
+    polygon.setAttribute('stroke-width', '2');
+    polygon.setAttribute('fill', 'none');
+    svg.appendChild(polygon);
+}
+
+function clearHitboxes() {
+    const svg = document.getElementById('hitbox-svg');
+    if (svg) {
+        svg.innerHTML = '';
+        svg.remove();
+    }
+}
+
+function toggleDebugMode(elm){
+    if(debugMode){
+        debugMode = false;
+        elm.innerHTML = `Debug Mode: OFF`;
+    } else {
+        debugMode = true;
+        elm.innerHTML = `Debug Mode: ON`;
+    }
 }
 
 function bossDash(b){

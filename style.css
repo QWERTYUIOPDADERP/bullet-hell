@@ -260,3 +260,20 @@ body{
 .punchRight{
     animation: punchRight 1000ms;
 }
+
+.test-box {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: rgba(0, 128, 255, 0.3);
+    transform-origin: center center;
+  }
+
+.hitbox {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: rgba(0, 255, 0, 0.15);
+    border: 2px solid;
+    clip-path: polygon(0 0);
+}
