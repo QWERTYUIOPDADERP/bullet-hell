@@ -52,7 +52,7 @@ const enemyStates = {
             strong: {
                 counter: 0,
                 reload: 100,
-                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15),
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15, 2),
             },
             gatling1: {
                 counter: 0,
@@ -69,11 +69,11 @@ const enemyStates = {
                 reload: 35,
                 function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18, angle-25, 8, 5),
             },
-            // summonTurret: {
-            //     counter: 0,
-            //     reload: 190,
-            //     function: () => createTurret(),
-            // }
+            summonTurret: {
+                counter: 0,
+                reload: 160,
+                function: () => createTurret(),
+            }
         },
         idealDistance: 300,
         lowerDistance: 320,
@@ -86,7 +86,7 @@ const enemyStates = {
             strong: {
                 counter: -30,
                 reload: 100,
-                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15),
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 10, angle, 20, 15, 2),
             },
             gatling1: {
                 counter: -30,
@@ -103,11 +103,11 @@ const enemyStates = {
                 reload: 35,
                 function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18, angle-25, 8, 5),
             },
-            // summonTurret: {
-            //     counter: -30,
-            //     reload: 190,
-            //     function: () => createTurret(),
-            // }
+            summonTurret: {
+                counter: -30,
+                reload: 160,
+                function: () => createTurret(),
+            }
 
         },
         upperDistance: 480,
@@ -122,7 +122,7 @@ const enemyStates = {
             punch: {
                 counter: 0,
                 reload: 100,
-                function: (boss, fist, attack) => melee(boss, fist, attack),
+                function: (fist, attack) => melee(fist, attack),
                 state: 0,
             },
         },
@@ -382,8 +382,8 @@ const boss1 = {
     x: screenX/2,
     y: 2*screenY/3,
     state: enemyStates.defaultFar,
-    health: 40,
-    maxHealth: 40,
+    health: 60,
+    maxHealth: 60,
     element: dude,
     angle: 90,
     size: 50,
@@ -549,17 +549,19 @@ function modifiedGameplay(){
 
 function ability(){
     if(char.usingAbility){
-        console.log(char.abilityCounter);
+        // console.log(char.abilityCounter);
         char.abilityCounter -= (char.abilityReload/char.abiltyTime);
         char.ability();
         if(char.abilityCounter<=0){
             char.abilityEnd();
             char.abilityCounter = 0;
             char.usingAbility = false;
+            char.element.style.boxShadow = ``;
         }
     } else {
         if(char.abilityCounter>=char.abilityReload){
             if(pAbility){
+                char.element.style.boxShadow = `gold 0px 0px 3px 1px`;
                 char.usingAbility = true;
                 char.abilityStart();
             }
@@ -573,7 +575,7 @@ function ability(){
 
 function updatePlayerCombat(){
     if(char.health<=0){
-        // player.remove();
+        player.remove();
     }
     if(char.counter >= char.fireSpeed && pAttack){
         char.counter = 0;
@@ -706,7 +708,7 @@ function setPlayer(state){
 
 function setUpTurrets(){
     for(const turret of turrets) {
-        turretList.push(new Turt(10, turret, 0, 4, 15, 0));
+        turretList.push(new Turt(10, turret, 0, 3, 15, 0));
     };
 }
 
@@ -772,7 +774,7 @@ function doBoss(b){
     } else {
         const tint = b.element.children[1];
         const percent = ((b.maxHealth-b.health)/b.maxHealth)/2;
-        if((1-(percent*2))<0.5){
+        if((1-(percent*2))<0.667){
             b.state = enemyStates.angySpin;
         }
         tint.style.backgroundColor = `rgba(255,0,0,${percent})`;
@@ -945,13 +947,14 @@ function bossAttack(b, centerX, centerY){
             for(const attack in attacks){
                 if(attacks[attack] === punch){
                     if(fist.style.opacity != 0){
-                        if((attacks[attack].hit !== 1) && satCollision(b.angle, playerAngle, b.size, b.size, char.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
+                        let rect = b.element.getElementsByClassName('fist')[0].getBoundingClientRect();
+                        if((attacks[attack].hit !== 1) && (satCollision(b.angle, playerAngle, rect.width, rect.height, char.size, char.size, rect.x+rect.width/2, rect.y+rect.height/2, x+char.size/2, screenY-y-char.size/2) || satCollision(b.angle, playerAngle, b.size, b.size, char.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2))){
                             attacks[attack].hit = 1;
                             char.health -= 5;
                         }
                     }
                     if(punch.counter>punch.reload){
-                        punch.function(b, fist, attacks[attack]);
+                        punch.function(fist, attacks[attack]);
                         punch.counter = 0;
                     } else {
                         punch.counter ++;
@@ -1002,15 +1005,19 @@ function bossAttack(b, centerX, centerY){
     }
 }
 
-function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 5, dx = 0, dy = 0) {
+function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 5, health, dx = 0, dy = 0) {
     const elm = document.createElement('div');
     elm.className = 'bullet'
     document.body.appendChild(elm);
 
     elm.style.transform = `translate(${x-radius}px, ${y-radius}px) rotate(${angle}deg)`;
     elm.style.zIndex = `12`;
+    if(char.usingAbility && (color == 'red' || color == `blue`)){
+        elm.style.boxShadow = `gold 0px 0px 3px 1px`;
+    }
 
     return {
+        health: health,
         element: elm,
         x: x,
         dx: dx,
@@ -1032,18 +1039,15 @@ function createBullet(x, y, speed, angle, color = 'black', radius = 8, damage = 
             checkRemoveAttack(this);
         },
         playerUpdate: function() {
-            // console.log(this.x);
-            // console.log(this.y);
-            
-            this.x += this.speed * Math.cos(this.angle/180*Math.PI) + dx/1.8;
-            this.y += this.speed * Math.sin(this.angle/180*Math.PI) - dy/1.8;
+            this.x += this.speed * Math.cos(this.angle/180*Math.PI) + this.dx/1.8;
+            this.y += this.speed * Math.sin(this.angle/180*Math.PI) - this.dy/1.8;
             this.element.style.transform = `translate(${this.x-this.radius}px, ${this.y-this.radius}px) rotate(${this.angle}deg)`;
             this.element.style.backgroundColor = `${color}`;
             this.element.style.width = `${radius*2}px`;
             this.element.style.height = `${radius*2}px`;
             
-            dx /= 1.2;
-            dy /= 1.2;
+            this.dx /= 1.2;
+            this.dy /= 1.2;
 
             checkRemoveAttack(this, false);
         },
@@ -1073,7 +1077,7 @@ function createTurret(){
 
     document.body.appendChild(container);
 
-    turretList.push(new Turt(10, turret, 0, 4, 15, turtX, turtY, 0));
+    turretList.push(new Turt(3, turret, 0, 4, 15, turtX, turtY, 0));
     // turrets.push(container);
     turrets = document.getElementsByClassName('autoTurret');
 }
@@ -1102,7 +1106,7 @@ function checkRemoveAttack(attack, check = true){
     } else {
         for (let turt of turretList){
             // console.log(turt);
-            if(satCollision(attack.angle, turt.angle, attack.radius*2, attack.radius*2, turt.size, turt.size*2, attack.x, attack.y, turt.x, turt.y)){
+            if(satCollision(attack.angle, turt.angle, attack.radius*2, attack.radius*2, turt.size, turt.size, attack.x, attack.y, turt.x, turt.y)){
                 removePlayerAttack(attack);
                 turt.health -= attack.damage;
                 break;
@@ -1139,13 +1143,13 @@ function checkRectCollision(div1, div2) {
     return touching;
   }
 
-function fireEnemyBullet(x, y, speed, angle, radius = 8, damage){
-    const bullet = createBullet(x, y, speed, angle, `black`, radius, damage);
+function fireEnemyBullet(x, y, speed, angle, radius = 8, damage, health = 1){
+    const bullet = createBullet(x, y, speed, angle, `black`, radius, damage, health);
     enemyAttacks.push(bullet);
 }
 
 function firePlayerBullet(x, y, speed, angle, dx, dy){
-    const bullet = createBullet(x, y, speed, angle, char.state.color, 5, char.damage, dx, dy);
+    const bullet = createBullet(x, y, speed, angle, char.state.color, 5, char.damage, 1, dx, dy);
     playerAttacks.push(bullet);
 }
 
@@ -1222,7 +1226,7 @@ function tReturn(){
         playerAttacks[i].element.remove();
         playerAttacks.splice(i,1);
     }
-    console.log(playerAttacks);
+    // console.log(playerAttacks);
     dx = 0; 
     dy = 0;
     screenX = window.innerWidth;
@@ -1253,7 +1257,6 @@ function updateAttacks(){
         attack.playerUpdate();
     });
     bulletBulletCollision();
-    // bulletBulletCollision(); Too complicated to do interpolation (required b/c too small and fast)
 }
 
 function bulletBulletCollision(){
@@ -1269,15 +1272,18 @@ function bulletBulletCollision(){
         pAttack = playerAttacks[i];
         for (l = 0; l<enemyAttacks.length; l++){
             eAttack = enemyAttacks[l];
-            pShiftY =  (pAttack.speed * Math.sin(pAttack.angle/180*Math.PI) + pAttack.dy/1.8);
-            pShiftX =  (pAttack.speed * Math.cos(pAttack.angle/180*Math.PI) + pAttack.dx/1.8);
+            pShiftY =  (pAttack.speed * Math.sin(pAttack.angle/180*Math.PI) + pAttack.dy);
+            pShiftX =  (pAttack.speed * Math.cos(pAttack.angle/180*Math.PI) + pAttack.dx);
             pShift =  Math.hypot(pShiftX, pShiftY);
-            eShiftY =  (eAttack.speed * Math.sin(eAttack.angle/180*Math.PI) + eAttack.dy/1.8);
-            eShiftX =  (eAttack.speed * Math.cos(eAttack.angle/180*Math.PI) + eAttack.dx/1.8);
+            eShiftY =  (eAttack.speed * Math.sin(eAttack.angle/180*Math.PI));
+            eShiftX =  (eAttack.speed * Math.cos(eAttack.angle/180*Math.PI));
             eShift =  Math.hypot(eShiftX, eShiftY);
             if(satCollision(pAttack.angle, eAttack.angle, pAttack.radius*2 + pShift, pAttack.radius*2, eAttack.radius*2 + eShift, eAttack.radius*2, pAttack.x-pShiftX, pAttack.y-pShiftY, eAttack.x-eShiftX, eAttack.y-eShiftY, true)){
-                removePlayerAttack(pAttack);
-                removeAttack(eAttack);
+                pAttack.health --;
+                eAttack.health --;
+
+                if(eAttack.health<=0) removeAttack(eAttack);
+                if(pAttack.health<=0) removePlayerAttack(pAttack);
                 break;
             }
         }
@@ -1431,13 +1437,7 @@ function bossDash(b){
     }, 450);
 }
 
-function melee(b, f, a){
-    const elm = b.element;
-    const rect = elm.getBoundingClientRect();
-    
-    const divCenterX = rect.left + rect.width / 2;
-    const divCenterY = rect.top + rect.height / 2;
-
+function melee(f, a){
     if(a.state === 0){
         a.state = 1;
         f.style.top = `-100%`
