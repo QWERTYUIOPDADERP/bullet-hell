@@ -573,7 +573,7 @@ function ability(){
 
 function updatePlayerCombat(){
     if(char.health<=0){
-        player.remove();
+        // player.remove();
     }
     if(char.counter >= char.fireSpeed && pAttack){
         char.counter = 0;
@@ -893,11 +893,11 @@ function moveBoss(bossX, bossY, b, tAngle){
                     b.state = b.state.tooFar;
                 }
             } else {
-                if(!b.inPlayer && (satCollision(b.angle, playerAngle, b.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2))){
+                if(!b.inPlayer && (satCollision(b.angle, playerAngle, b.size, b.size, char.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2))){
                     b.inPlayer = true;
                     char.health -= 5;
                     // console.log('damaging');
-                } else if (!satCollision(b.angle, playerAngle, b.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
+                } else if (!satCollision(b.angle, playerAngle, b.size, b.size, char.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
                     b.inPlayer = false;
                 }
                 b.x += b.state.moveSpeed * 14 * Math.cos(b.angle/180*Math.PI);
@@ -945,7 +945,7 @@ function bossAttack(b, centerX, centerY){
             for(const attack in attacks){
                 if(attacks[attack] === punch){
                     if(fist.style.opacity != 0){
-                        if((attacks[attack].hit !== 1) && satCollision(b.angle, playerAngle, b.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
+                        if((attacks[attack].hit !== 1) && satCollision(b.angle, playerAngle, b.size, b.size, char.size, char.size, b.x, screenY-b.y-b.size, x+char.size/2, screenY-y-char.size/2)){
                             attacks[attack].hit = 1;
                             char.health -= 5;
                         }
@@ -1095,20 +1095,20 @@ function checkRemoveAttack(attack, check = true){
     }
 
     if(check){
-        if(satCollision(attack.angle, playerAngle, attack.radius*2, char.size, attack.x, attack.y, x+char.size/2, screenY-y-char.size/2)){
+        if(satCollision(attack.angle, playerAngle, attack.radius*2, attack.radius*2, char.size, char.size, attack.x, attack.y, x+char.size/2, screenY-y-char.size/2)){
             removeAttack(attack);
             char.health -= attack.damage;
         }
     } else {
         for (let turt of turretList){
             // console.log(turt);
-            if(satCollision(attack.angle, turt.angle, attack.radius*2, turt.size, attack.x, attack.y, turt.x, turt.y)){
+            if(satCollision(attack.angle, turt.angle, attack.radius*2, attack.radius*2, turt.size, turt.size*2, attack.x, attack.y, turt.x, turt.y)){
                 removePlayerAttack(attack);
                 turt.health -= attack.damage;
                 break;
             }
         };
-        if(satCollision(attack.angle, boss1.angle, attack.radius*2, boss1.size, attack.x, attack.y, boss1.x, screenY-boss1.y-boss1.size)){
+        if(satCollision(attack.angle, boss1.angle, attack.radius*2, attack.radius*2, boss1.size, boss1.size, attack.x, attack.y, boss1.x, screenY-boss1.y-boss1.size)){
             removePlayerAttack(attack);
             boss1.health -= attack.damage;
         }
@@ -1259,15 +1259,26 @@ function updateAttacks(){
 function bulletBulletCollision(){
     let pAttack;
     let eAttack;
+    let pShiftX;
+    let pShiftY;
+    let pShift;
+    let eShiftX;
+    let eShiftY;
+    let eShift;
     for (i = 0; i<(playerAttacks.length); i++){
         pAttack = playerAttacks[i];
         for (l = 0; l<enemyAttacks.length; l++){
             eAttack = enemyAttacks[l];
-            if(satCollision(pAttack.angle, eAttack.angle, pAttack.radius*2, eAttack.radius*2, pAttack.x, pAttack.y, eAttack.x, eAttack.y)){
+            pShiftY =  (pAttack.speed * Math.sin(pAttack.angle/180*Math.PI) + pAttack.dy/1.8);
+            pShiftX =  (pAttack.speed * Math.cos(pAttack.angle/180*Math.PI) + pAttack.dx/1.8);
+            pShift =  Math.hypot(pShiftX, pShiftY);
+            eShiftY =  (eAttack.speed * Math.sin(eAttack.angle/180*Math.PI) + eAttack.dy/1.8);
+            eShiftX =  (eAttack.speed * Math.cos(eAttack.angle/180*Math.PI) + eAttack.dx/1.8);
+            eShift =  Math.hypot(eShiftX, eShiftY);
+            if(satCollision(pAttack.angle, eAttack.angle, pAttack.radius*2 + pShift, pAttack.radius*2, eAttack.radius*2 + eShift, eAttack.radius*2, pAttack.x-pShiftX, pAttack.y-pShiftY, eAttack.x-eShiftX, eAttack.y-eShiftY, true)){
                 removePlayerAttack(pAttack);
                 removeAttack(eAttack);
                 break;
-                // char.health -= attack.damage;
             }
         }
     }
@@ -1327,19 +1338,22 @@ function isOverlap(proj1, proj2) {
     return proj1.max >= proj2.min && proj2.max >= proj1.min;
 }
 
-function satCollision(bAng, tAng, bSize, tSize, bX, bY, tX, tY) {
+function satCollision(bAng, tAng, bWidth, bHeight, tWidth, tHeight, bX, bY, tX, tY) {
 
-    bX -= bSize/2;
-    bY -= bSize/2;
+    bX -= bWidth/2;
+    bY -= bHeight/2;
 
-    tX -= tSize/2;
-    tY -= tSize/2;
+    tX -= tWidth/2;
+    tY -= tHeight/2;
 
     bAng *= (Math.PI/180);
     tAng *= (Math.PI/180);
 
-    const verts1 = getRectVertices(bX, bY, bSize, bSize, bAng);
-    const verts2 = getRectVertices(tX, tY, tSize, tSize, tAng);
+    let verts1;
+    let verts2;
+
+        verts1 = getRectVertices(bX, bY, bWidth, bHeight, bAng);
+        verts2 = getRectVertices(tX, tY, tWidth, tHeight, tAng);
     
     const axes1 = getAxes(verts1);
     const axes2 = getAxes(verts2);
