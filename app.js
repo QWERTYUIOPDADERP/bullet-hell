@@ -21,6 +21,8 @@ let txt = document.getElementById('testingText');
 let startScreen = document.getElementById('start');
 let dude = document.getElementById('boss');
 
+let deadScreen = document.getElementById('youDied');
+
 let hud = document.getElementById('hud');
 let hudAbility = document.getElementById('pAbility');
 let hudStamina = document.getElementById('pStamina');
@@ -37,7 +39,7 @@ const playerStates = {
     speedy: {type: 'fast', speed: 5, color: "red"}
 };
 
-const enemyStates = {
+let enemyStates = {
     defaultTooFar: {
         type: 'normalTooFar', 
         moveSpeed: 6,
@@ -338,6 +340,181 @@ const enemyStates = {
         },
         idealDistance: 80,
     },
+    angyTooFar: {
+        type: 'angyTooFar', 
+        moveSpeed: 6,
+        turnSpeed: 8, 
+        ableToMove: true,
+        attacks: {
+            dash: {
+                counter: -40,
+                reload: 30*0.8,
+                function: (entity) => bossDash(entity),
+            },
+            gatling1: {
+                counter: 0,
+                reload: 35*0.8,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 18*1.5, angle, 8, 5),
+            },
+            gatling2: {
+                counter: -10,
+                reload: 35*0.8,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*1.5, angle+25, 8, 5),
+            },
+            gatling3: {
+                counter: -10,
+                reload: 35*0.8,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*1.5, angle-25, 8, 5),
+            },
+        },
+        idealDistance: 300,
+        lowerDistance: 320,
+    },
+    angyFar: {
+        type: 'angyFar', 
+        moveSpeed: 2,
+        turnSpeed: 2, 
+        attacks: {
+            gatling1: {
+                counter: -30-40,
+                reload: 20*0.8,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX, centerY, 18*1.2, angle, 8, 5),
+            },
+            gatling4: {
+                counter: -30-(20*0.5*0.5)-40,
+                reload: 20*0.8,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+15, centerY, 18*1.2, angle, 8, 5),
+            },
+            gatling2: {
+                counter: -40-40,
+                reload: 35*0.5,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*1.2, angle+25, 8, 5),
+            },
+            gatling3: {
+                counter: -40-40,
+                reload: 35*0.5,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*1.2, angle-25, 8, 5),
+            },
+            gatling5: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+85, 8, 5),
+            },
+            gatling6: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-85, 8, 5),
+            },
+            gatling7: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+75, 8, 5),
+            },
+            gatling8: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-75, 8, 5),
+            },
+            gatling9: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+65, 8, 5),
+            },
+            gatling10: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-65, 8, 5),
+            },
+            gatling11: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+55, 8, 5),
+            },
+            gatling12: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-55, 8, 5),
+            },
+            gatling13: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+45, 8, 5),
+            },
+            gatling14: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-45, 8, 5),
+            },
+            gatling15: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+35, 8, 5),
+            },
+            gatling16: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-35, 8, 5),
+            },
+            gatling9: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+95, 8, 5),
+            },
+            gatling10: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-95, 8, 5),
+            },
+            gatling11: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+105, 8, 5),
+            },
+            gatling12: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-105, 8, 5),
+            },
+            gatling13: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+115, 8, 5),
+            },
+            gatling14: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-115, 8, 5),
+            },
+            gatling15: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX-10, centerY, 18*0.2, angle+125, 8, 5),
+            },
+            gatling16: {
+                counter: -40-40,
+                reload: 40,
+                function: (centerX, centerY, angle) => fireEnemyBullet(centerX+10, centerY, 18*0.2, angle-125, 8, 5),
+            },
+        },
+        // upperDistance: 480,
+        idealDistance: 300,
+        // lowerDistance: 150,
+    },
+    angyClose: {
+        type: 'angyClose', 
+        moveSpeed: 3,
+        turnSpeed: 10,  
+        attacks: {
+            punch: {
+                counter: 0,
+                reload: 80,
+                function: (fist, attack) => melee(fist, attack),
+                state: 0,
+            },
+        },
+        idealDistance: 50,
+        upperDistance: 150,
+    },
     // speedy: {type: 'fast', speed: 4, color: "red"}
 };
 
@@ -345,6 +522,11 @@ enemyStates.defaultFar.tooClose = enemyStates.defaultClose;
 enemyStates.defaultFar.tooFar = enemyStates.defaultTooFar;
 enemyStates.defaultClose.tooFar = enemyStates.defaultFar;
 enemyStates.defaultTooFar.tooClose = enemyStates.defaultFar;
+
+enemyStates.angyFar.tooClose = enemyStates.angyClose;
+enemyStates.angyFar.tooFar = enemyStates.angyTooFar;
+enemyStates.angyClose.tooFar = enemyStates.angyFar;
+enemyStates.angyTooFar.tooClose = enemyStates.angyFar;
 
 let mouseX = 0;
 let mouseY = 0;
@@ -407,6 +589,7 @@ const char = {
     abilityCounter: 800,
     usingAbility: false,
     abiltyTime: 130,
+    // abiltyTime: 360,
 }
 
 document.addEventListener("keydown", (e) => {
@@ -575,7 +758,9 @@ function ability(){
 
 function updatePlayerCombat(){
     if(char.health<=0){
-        player.remove();
+        // player.remove();
+        deadScreen.style.display = 'flex';
+        clearInterval(intervalID);
     }
     if(char.counter >= char.fireSpeed && pAttack){
         char.counter = 0;
@@ -634,6 +819,7 @@ function collide(){
 }
 
 function movePlayer(){
+    txt.innerHTML = boss1.health;
     switch (char.state.type) {
         case "fast":
             if(char.stamina>0){
@@ -644,7 +830,7 @@ function movePlayer(){
                 player.style.left = `${x}px`;
                 player.style.bottom = `${y}px`;
                 if(char.health>0){
-                    txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
+                    // txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
                 }
                 char.stamina -= 10;
             } else {
@@ -659,7 +845,7 @@ function movePlayer(){
             player.style.left = `${x}px`;
             player.style.bottom = `${y}px`;
             if(char.health>0){
-                txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
+                // txt.innerHTML = Math.round((performance.now()-startTime)/1000)+score;
             }
             if(char.stamina<char.maxStamina){
                 char.stamina ++;
@@ -777,6 +963,10 @@ function doBoss(b){
         if((1-(percent*2))<0.667){
             b.state = enemyStates.angySpin;
         }
+        if((1-(percent*2))<0.333){
+            b.state = enemyStates.angyFar;
+            b.element.style.boxShadow = '0 0 75px 30px red'
+        }
         tint.style.backgroundColor = `rgba(255,0,0,${percent})`;
         tint.style.transform = 'scale(1)';
         const elm = b.element;
@@ -840,6 +1030,8 @@ function moveBoss(bossX, bossY, b, tAngle){
     switch (b.state.type) {
         case `normalFar`:
         case `normalClose`:
+        case `angyFar`:
+        case `angyClose`:
             if(distToPlayer-b.state.idealDistance>15){
                 b.x += b.state.moveSpeed * Math.cos(b.angle/180*Math.PI);
                 b.y -= b.state.moveSpeed * Math.sin(b.angle/180*Math.PI);
@@ -872,6 +1064,7 @@ function moveBoss(bossX, bossY, b, tAngle){
             }
             break;
         case `normalTooFar`:
+        case `angyTooFar`:
             if(b.state.ableToMove){
                 const dash = b.state.attacks.dash;
                 const percent = (100*(1-(dash.reload-dash.counter)/dash.reload))
@@ -931,6 +1124,7 @@ function bossAttack(b, centerX, centerY){
     const attacks = b.state.attacks;
     switch (b.state.type) {
         case `normalFar`:
+        case `angyFar`:
             for(const attack in attacks){
                 if(attacks[attack].counter>attacks[attack].reload){
                     attacks[attack].function(centerX, centerY, b.angle);
@@ -942,6 +1136,7 @@ function bossAttack(b, centerX, centerY){
             
             break;
         case `normalClose`:
+        case `angyClose`:
             const fist = b.element.children[2];
             const punch = attacks['punch']
             for(const attack in attacks){
@@ -968,6 +1163,7 @@ function bossAttack(b, centerX, centerY){
             }
             break;
         case `normalTooFar`:
+        case `angyTooFar`:
             const dash = attacks['dash']
             for(const attack in attacks){
                 if(attacks[attack] === dash){
@@ -1156,12 +1352,13 @@ function firePlayerBullet(x, y, speed, angle, dx, dy){
 function start(){
     player = document.getElementById('player');
     char.element = player;
+    deadScreen.style.display = 'none';
     startScreen.style.display = 'none';
     hud.style.display = 'block';
     boss1.x = screenX/2;
     startTime = performance.now();
     setUpTurrets();
-    setInterval(() => {
+    intervalID = setInterval(() => {
         gameplay();
     }, 25);
 }
@@ -1175,6 +1372,7 @@ function tutorial(){
     tutorialNum = 0;
     player = document.getElementById('fakePlayer');
     char.element = player;
+    deadScreen.style.display = 'none';
     startScreen.style.display = 'none';
     hud.style.display = 'block';
     startTime = performance.now();
@@ -1222,9 +1420,18 @@ function tContinue(){
 }
 
 function tReturn(){
+    clearInterval(intervalID);
     for (i = 0; i<(playerAttacks.length);){
         playerAttacks[i].element.remove();
         playerAttacks.splice(i,1);
+    }
+    for (i = 0; i<(turretList.length);){
+        turretList[i].element.parentNode.remove();
+        turretList.splice(turretList.indexOf(turretList[i]), 1);
+    }
+    for (i = 0; i<(enemyAttacks.length);){
+        enemyAttacks[i].element.remove();
+        enemyAttacks.splice(i,1);
     }
     // console.log(playerAttacks);
     dx = 0; 
@@ -1237,8 +1444,16 @@ function tReturn(){
     score = 0;
     tutorialNum = 0;
     player.style.left = `-25%`;
+    boss1.health = boss1.maxHealth;
+    boss1.inPlayer = false;
+    boss1.x = screenX/2;
+    boss1.y = 2*screenY/3;
+    boss1.state = enemyStates.defaultFar;
+    boss1.angle = 90;
     player = document.getElementById('player');
     char.element = player;
+    char.health = char.maxHealth;
+    char.stamina = char.maxStamina;
     startScreen.style.display = 'flex';
     hud.style.display = 'none';
     startTime = performance.now();
@@ -1246,7 +1461,13 @@ function tReturn(){
     tTxt.innerHTML = '';
     char.abilityCounter = char.abilityReload;
     char.stamina = char.maxStamina;
-    clearInterval(intervalID);
+    char.state = playerStates.default;
+    char.fireSpeed = 15;
+    char.counter = 0;
+    char.damage = 1;
+    char.abilityReload = 800;
+    char.abilityCounter = 800;
+    char.usingAbility = false;
 }
 
 function updateAttacks(){
