@@ -11,6 +11,7 @@ let y = screenY/2 - playerSize/2;
 let playerAngle = 0;
 let score = 0;
 let dashTimeout;
+let song = '';
 // 0 = up
 // 1 = left
 // 2 = right
@@ -33,6 +34,29 @@ let startTime = 0;
 let turrets = document.getElementsByClassName('autoTurret');
 
 let debugMode = false;
+
+let lobbySound = new Audio('sounds/lobbyAmbience.mp3');
+let bossPhase1Sound = new Audio('sounds/bossMusic2.mp3');
+let bossPhase2Sound = new Audio('sounds/bossMusic1.mp3');
+let bossPhase3StartSound = new Audio('sounds/dramaticBuildup.mp3');
+let bossPhase3Sound = new Audio('sounds/');
+let shootSound = new Audio('sounds/electronicBullet.mp3');
+let enemyShootSound = new Audio('sounds/otherBullet.mp3');
+let collisionSound = new Audio('sounds/');
+let buttonHoverSound = new Audio('sounds/buttonHover.mp3');
+let buttonClickSound = new Audio('sounds/buttonHover.mp3');
+
+lobbySound.volume = 0.3;
+lobbySound.loop = true;
+bossPhase1Sound.volume = 0.3;
+bossPhase1Sound.loop = true;
+bossPhase2Sound.volume = 0.3;
+bossPhase2Sound.loop = true;
+bossPhase3Sound.volume = 0.3;
+bossPhase3Sound.loop = true;
+lobbySound.play();
+
+let buttons = document.getElementsByTagName('button');
 
 const playerStates = {
     default: {type: 'normal', speed: 2, color: "blue"},
@@ -732,7 +756,6 @@ function modifiedGameplay(){
 
 function ability(){
     if(char.usingAbility){
-        // console.log(char.abilityCounter);
         char.abilityCounter -= (char.abilityReload/char.abiltyTime);
         char.ability();
         if(char.abilityCounter<=0){
@@ -960,12 +983,38 @@ function doBoss(b){
     } else {
         const tint = b.element.children[1];
         const percent = ((b.maxHealth-b.health)/b.maxHealth)/2;
-        if((1-(percent*2))<0.667){
-            b.state = enemyStates.angySpin;
-        }
-        if((1-(percent*2))<0.333){
+        if((1-(percent*2))<0.333 && !(b.element.style.boxShadow).includes('red')){
             b.state = enemyStates.angyFar;
             b.element.style.boxShadow = '0 0 75px 30px red'
+            bossPhase3StartSound.playbackRate = 4;
+            bossPhase3StartSound.play();
+            if(song != bossPhase3Sound){
+                fadeIn(bossPhase3Sound, 10000);
+            }
+            if(song = bossPhase1Sound){
+                fadeOut(bossPhase1Sound, 10000);
+            }
+            if(song = bossPhase2Sound){
+                fadeOut(bossPhase2Sound, 10000);
+            }
+            song = bossPhase3Sound;
+        } else if((1-(percent*2))<0.667 && !(b.element.style.boxShadow).includes('red')){
+            b.state = enemyStates.angySpin;
+            if(song != bossPhase2Sound){
+                fadeIn(bossPhase2Sound, 10000);
+            }
+            if(song = bossPhase1Sound){
+                fadeOut(bossPhase1Sound, 10000);
+            }
+            if(song = bossPhase3Sound){
+                fadeOut(bossPhase3Sound, 10000);
+            }
+            song = bossPhase2Sound;
+        } else {
+            if(song != bossPhase1Sound){
+                fadeIn(bossPhase1Sound, 10000);
+            }
+            song = bossPhase1Sound;
         }
         tint.style.backgroundColor = `rgba(255,0,0,${percent})`;
         tint.style.transform = 'scale(1)';
@@ -1347,6 +1396,10 @@ function fireEnemyBullet(x, y, speed, angle, radius = 8, damage, health = 1){
 function firePlayerBullet(x, y, speed, angle, dx, dy){
     const bullet = createBullet(x, y, speed, angle, char.state.color, 5, char.damage, 1, dx, dy);
     playerAttacks.push(bullet);
+    shootSound.currentTime = 0;
+    shootSound.volume = 0.15+(Math.random()*0.1-0.05);
+    shootSound.playbackRate = 1.8+(Math.random()*0.4-0.2);
+    shootSound.play();
 }
 
 function start(){
@@ -1357,6 +1410,7 @@ function start(){
     hud.style.display = 'block';
     boss1.x = screenX/2;
     startTime = performance.now();
+    fadeOut(lobbySound, 10000);
     setUpTurrets();
     intervalID = setInterval(() => {
         gameplay();
@@ -1663,12 +1717,10 @@ function melee(f, a){
         a.state = 1;
         f.style.top = `-100%`
         f.classList.toggle('punchRight');
-        // f.style.bottom = ``
     } else {
         a.state = 0;
         f.style.top = `200%`
         f.classList.toggle('punchLeft');
-        // f.style.bottom = `100%`
     }
     f.style.opacity = `1`;
     setTimeout(() => {
@@ -1689,3 +1741,64 @@ function endRapidFire(){
 function startRapidFire(){
     char.oldFireSpeed = char.fireSpeed;
 }
+
+for (let i = 0; i < buttons.length; i++) {
+    const button = buttons[i];
+    buttonHoverSound.volume = 0.3;
+    button.addEventListener('mouseover', function() {
+        buttonHoverSound.play();
+    }, false);
+
+    button.addEventListener('click', function() {
+        buttonClickSound.play();
+    }, false);
+}
+
+function fadeIn(audio, duration) {
+    let volume = 0;
+    const increment = 0.01;
+    const intervalTime = duration / (1 / increment);
+
+    audio.volume = volume;
+    audio.play();
+
+    const fadeInterval = setInterval(() => {
+        if (volume < 0.1) {
+        volume += increment;
+        audio.volume = volume;
+        } else {
+        clearInterval(fadeInterval);
+        }
+    }, intervalTime);
+}
+
+function fadeOut(audio, duration) {
+    let volume = 0.1;
+    const decrement = 0.01;
+    const intervalTime = duration / (1 / decrement);
+
+    audio.volume = volume;
+
+    const fadeInterval = setInterval(() => {
+        if (volume > (0+decrement)) {
+            volume -= decrement;
+            audio.volume = volume;
+        } else {
+        audio.pause();
+            audio.volume = 0;
+            clearInterval(fadeInterval);
+        }
+    }, intervalTime);
+}
+
+function playAudio() {
+    if(!intervalID){
+        lobbySound.play();
+    }
+    //remove the event listener to prevent multiple playbacks
+    document.removeEventListener('click', playAudio);
+    document.removeEventListener('keydown', playAudio);
+}
+
+document.addEventListener('click', playAudio);
+document.addEventListener('keydown', playAudio);

@@ -215,8 +215,17 @@ body{
 }
 
 .column{
+    width: 100%;
     display: flex;
     flex-flow: column nowrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.column > button{
+    width: 25%;
+    height: 50px;
+    margin: 10px 0 ;
 }
 
 #tutorial{
