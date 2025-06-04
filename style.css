@@ -293,6 +293,14 @@ body{
     animation: punchRight 1000ms;
 }
 
+button{
+    background: dimgray;
+}
+
+button:hover{
+    background: white;
+}
+
 .test-box {
     position: absolute;
     width: 100px;
