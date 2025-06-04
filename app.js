@@ -711,6 +711,10 @@ document.addEventListener('mousemove', (event) => {
     mouseY = event.clientY;
 });
 
+document.addEventListener('contextmenu', function(event) {
+    event.preventDefault();
+  });
+
 function updatePlayerAngle(){
     const pointerRect = player.getBoundingClientRect();
     const pointerCenterX = pointerRect.left + pointerRect.width / 2;
