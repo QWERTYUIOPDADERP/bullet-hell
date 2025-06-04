@@ -130,6 +130,14 @@ body{
     z-index: 15;
 }
 
+section#youWon, section#youDied{
+    background: transparent;
+}
+
+section#youWon button, section#youDied button{
+    opacity: 0.5;
+}
+
 #slantText {
     position: absolute;
     top: 0;
@@ -214,6 +222,13 @@ body{
     height: 8px;
     background: lightblue;
     margin-bottom: 2px;
+}
+
+#tutorialText{
+    color: white;
+    height: fit-content;
+    padding: 5px;
+    background: black;
 }
 
 .column{

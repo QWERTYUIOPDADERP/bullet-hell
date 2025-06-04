@@ -68,6 +68,7 @@ let stats = {
     timesDied: 0,
     bossDefeated: 0,
     gameTime: 0,
+    fastestWin: 0,
 }
 
 const playerStates = {
@@ -754,10 +755,7 @@ function gameplay(){
     updatePlayerAngle();
     updateAttacks();
     updatePlayerCombat();
-    console.log(Math.round((performance.now()-startTime)/1000));
-    console.log(stats.gameTime)
     if((Math.round((performance.now()-startTime)/1000))>stats.gameTime){
-        console.log('ye')
         stats.gameTime = Math.round((performance.now()-startTime)/1000);
     }
     saveToLocalStorage();
@@ -816,7 +814,10 @@ function updatePlayerCombat(){
     } else {
         char.counter ++;
     }
-    player.style.filter = `grayscale(${1-(char.health/char.maxHealth)})`
+    if(char.health<0){
+        char.health = 0;
+    }
+    player.style.filter = `grayscale(${(1-(char.health/char.maxHealth))*0.5})`
 }
 
 function parseEnemeies(){
@@ -1004,9 +1005,12 @@ function doBoss(b){
             clearInterval(intervalID);
             score += 100;
             b.state = 'dead';
-            h.remove();
-            b.element.remove();
+            // h.remove();
+            // b.element.remove();
             stats.bossDefeated ++;
+            if((Math.round((performance.now()-startTime)/1000))<stats.fastestWin || (stats.fastestWin === 0)){
+                stats.fastestWin = (Math.round((performance.now()-startTime)/1000));
+            }
         }
     } else {
         const tint = b.element.children[1];
@@ -1783,10 +1787,12 @@ for (let i = 0; i < buttons.length; i++) {
     const button = buttons[i];
     buttonHoverSound.volume = 0.6;
     button.addEventListener('mouseover', function() {
+        buttonHoverSound.currentTime = 0;
         buttonHoverSound.play();
     }, false);
 
     button.addEventListener('click', function() {
+        buttonClickSound.currentTime = 0;
         buttonClickSound.play();
     }, false);
 }
@@ -1859,6 +1865,7 @@ const tDestroyed = document.getElementById('turretsDestroyed');
 const deaths = document.getElementById('deaths');
 const wins = document.getElementById('wins');
 const longestGame = document.getElementById('longGame');
+const fastGame = document.getElementById('fastGame');
 
 function viewStats(){
     statScreen.style.display = 'flex';
@@ -1869,6 +1876,7 @@ function viewStats(){
     deaths.innerText = `Deaths: ${stats.timesDied}`;
     wins.innerText = `Wins: ${stats.bossDefeated}`;
     longestGame.innerText = `Longest Game: ${stats.gameTime} sec`;
+    fastGame.innerText = `Fastest Win: ${stats.fastestWin} sec`;
 }
 
 function resetStats(){
@@ -1879,6 +1887,7 @@ function resetStats(){
         timesDied: 0,
         bossDefeated: 0,
         gameTime: 0,
+        fastestWin: 0,
     };
     saveToLocalStorage();
     viewStats();
