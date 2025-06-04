@@ -614,8 +614,8 @@ const char = {
     abilityReload: 800,
     abilityCounter: 800,
     usingAbility: false,
-    // abiltyTime: 130,
-    abiltyTime: 700,
+    abiltyTime: 130,
+    // abiltyTime: 700,
 }
 
 document.addEventListener("keydown", (e) => {
