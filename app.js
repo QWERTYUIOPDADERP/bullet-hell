@@ -23,6 +23,7 @@ let startScreen = document.getElementById('start');
 let dude = document.getElementById('boss');
 
 let deadScreen = document.getElementById('youDied');
+let winScreen = document.getElementById('youWon');
 
 let hud = document.getElementById('hud');
 let hudAbility = document.getElementById('pAbility');
@@ -39,7 +40,7 @@ let lobbySound = new Audio('sounds/lobbyAmbience.mp3');
 let bossPhase1Sound = new Audio('sounds/bossMusic2.mp3');
 let bossPhase2Sound = new Audio('sounds/bossMusic1.mp3');
 let bossPhase3StartSound = new Audio('sounds/dramaticBuildup.mp3');
-let bossPhase3Sound = new Audio('sounds/');
+let bossPhase3Sound = new Audio('sounds/cyberpunkHeavy.mp3');
 let shootSound = new Audio('sounds/electronicBullet.mp3');
 let enemyShootSound = new Audio('sounds/otherBullet.mp3');
 let collisionSound = new Audio('sounds/');
@@ -57,6 +58,15 @@ bossPhase3Sound.loop = true;
 lobbySound.play();
 
 let buttons = document.getElementsByTagName('button');
+
+let stats = {
+    bulletFired: 0,
+    bulletsHit: 0,
+    turretsDestroyed: 0,
+    timesDied: 0,
+    bossDefeated: 0,
+    gameTime: 0,
+}
 
 const playerStates = {
     default: {type: 'normal', speed: 2, color: "blue"},
@@ -738,6 +748,13 @@ function gameplay(){
     updatePlayerAngle();
     updateAttacks();
     updatePlayerCombat();
+    console.log(Math.round((performance.now()-startTime)/1000));
+    console.log(stats.gameTime)
+    if((Math.round((performance.now()-startTime)/1000))>stats.gameTime){
+        console.log('ye')
+        stats.gameTime = Math.round((performance.now()-startTime)/1000);
+    }
+    saveToLocalStorage();
 }
 
 function modifiedGameplay(){
@@ -783,6 +800,7 @@ function updatePlayerCombat(){
     if(char.health<=0){
         // player.remove();
         deadScreen.style.display = 'flex';
+        stats.timesDied ++;
         clearInterval(intervalID);
     }
     if(char.counter >= char.fireSpeed && pAttack){
@@ -926,6 +944,7 @@ function doTurrets(targetX, targetY){
         if(tur.health<=0){
             turretList.splice(turretList.indexOf(tur), 1);
             tur.element.parentNode.remove();
+            stats.turretsDestroyed ++;
             score += 20;
             continue;
         }
@@ -975,10 +994,13 @@ function doBoss(b){
     if(b.health<=0){
         if(b.state != 'dead'){
             const h = b.element.nextElementSibling;
+            winScreen.style.display = 'flex';
+            clearInterval(intervalID);
             score += 100;
             b.state = 'dead';
             h.remove();
             b.element.remove();
+            stats.bossDefeated ++;
         }
     } else {
         const tint = b.element.children[1];
@@ -1337,10 +1359,10 @@ function checkRemoveAttack(attack, check = true){
     );
 
     if (isOffScreen && check) {
-        removeAttack(attack)
+        removeAttack(attack);
     } else if (isOffScreen && !check){
         // console.log(rect)
-        removePlayerAttack(attack)
+        removePlayerAttack(attack);
     }
 
     if(check){
@@ -1353,12 +1375,14 @@ function checkRemoveAttack(attack, check = true){
             // console.log(turt);
             if(satCollision(attack.angle, turt.angle, attack.radius*2, attack.radius*2, turt.size, turt.size, attack.x, attack.y, turt.x, turt.y)){
                 removePlayerAttack(attack);
+                stats.bulletsHit ++;
                 turt.health -= attack.damage;
                 break;
             }
         };
         if(satCollision(attack.angle, boss1.angle, attack.radius*2, attack.radius*2, boss1.size, boss1.size, attack.x, attack.y, boss1.x, screenY-boss1.y-boss1.size)){
             removePlayerAttack(attack);
+            stats.bulletsHit ++;
             boss1.health -= attack.damage;
         }
     }
@@ -1395,6 +1419,7 @@ function fireEnemyBullet(x, y, speed, angle, radius = 8, damage, health = 1){
 
 function firePlayerBullet(x, y, speed, angle, dx, dy){
     const bullet = createBullet(x, y, speed, angle, char.state.color, 5, char.damage, 1, dx, dy);
+    stats.bulletFired ++;
     playerAttacks.push(bullet);
     shootSound.currentTime = 0;
     shootSound.volume = 0.15+(Math.random()*0.1-0.05);
@@ -1412,6 +1437,7 @@ function start(){
     startTime = performance.now();
     fadeOut(lobbySound, 10000);
     setUpTurrets();
+    getLocalStorage();
     intervalID = setInterval(() => {
         gameplay();
     }, 25);
@@ -1558,7 +1584,10 @@ function bulletBulletCollision(){
                 eAttack.health --;
 
                 if(eAttack.health<=0) removeAttack(eAttack);
-                if(pAttack.health<=0) removePlayerAttack(pAttack);
+                if(pAttack.health<=0) {
+                    removePlayerAttack(pAttack);
+                    stats.bulletsHit ++;
+                }
                 break;
             }
         }
@@ -1798,6 +1827,56 @@ function playAudio() {
     //remove the event listener to prevent multiple playbacks
     document.removeEventListener('click', playAudio);
     document.removeEventListener('keydown', playAudio);
+}
+
+function saveToLocalStorage(){
+    localStorage.setItem('stats', JSON.stringify(stats));
+}
+
+function getLocalStorage(){
+    if(localStorage.getItem('stats')){
+        stats = JSON.parse(localStorage.getItem('stats'));
+    }
+}
+// bulletFired: 0,
+//     bulletsHit: 0,
+//     turretsDestroyed: 0,
+//     timesDied: 0,
+//     timesWon: 0,
+const statScreen = document.getElementById('stats');
+const shots = document.getElementById('shots');
+const hit = document.getElementById('shotsHit');
+const tDestroyed = document.getElementById('turretsDestroyed');
+const deaths = document.getElementById('deaths');
+const wins = document.getElementById('wins');
+const longestGame = document.getElementById('longGame');
+
+function viewStats(){
+    statScreen.style.display = 'flex';
+    getLocalStorage();
+    shots.innerText = `Shots Fired: ${stats.bulletFired}`;
+    hit.innerText = `Shots Hit: ${stats.bulletsHit}`;
+    tDestroyed.innerText = `Turrets Destroyed: ${stats.turretsDestroyed}`;
+    deaths.innerText = `Deaths: ${stats.timesDied}`;
+    wins.innerText = `Wins: ${stats.bossDefeated}`;
+    longestGame.innerText = `Longest Game: ${stats.gameTime} sec`;
+}
+
+function resetStats(){
+    stats = {
+        bulletFired: 0,
+        bulletsHit: 0,
+        turretsDestroyed: 0,
+        timesDied: 0,
+        bossDefeated: 0,
+        gameTime: 0,
+    };
+    saveToLocalStorage();
+    viewStats();
+}
+
+function hideStats(){
+    statScreen.style.display = 'none';
 }
 
 document.addEventListener('click', playAudio);

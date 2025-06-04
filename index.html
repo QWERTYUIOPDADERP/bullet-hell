@@ -15,6 +15,7 @@
         <div class="column">
             <button onclick="start()">START</button>
             <button onclick="tutorial()">TUTORIAL</button>
+            <button onclick="viewStats()">VIEW STATS</button>
             <details>
                 <summary>Options:</summary>
                 <button onclick="toggleDebugMode(this)">Debug Mode: OFF</button>
@@ -29,6 +30,24 @@
         <div class="column">
             <h1>You died</h1>
             <button id="returnToMenu" onclick="window.location.reload()" focusable="false">Return To Menu</button>
+        </div>
+    </section>
+    <section id="youWon">
+        <div class="column">
+            <h1>You won!</h1>
+            <button id="returnToMenu" onclick="window.location.reload()" focusable="false">Return To Menu</button>
+        </div>
+    </section>
+    <section id="stats">
+        <div class="column">
+            <h1 id="shots"></h1>
+            <h1 id="shotsHit"></h1>
+            <h1 id="turretsDestroyed"></h1>
+            <h1 id="deaths"></h1>
+            <h1 id="wins"></h1>
+            <h1 id="longGame"></h1>
+            <button onclick="hideStats()">RETURN</button>
+            <button onclick="resetStats()">RESET STATS (IRREVERSABLE)</button>
         </div>
     </section>
     <div id="fakePlayer" class="block"></div>
