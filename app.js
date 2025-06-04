@@ -624,7 +624,7 @@ const char = {
     abilityReload: 800,
     abilityCounter: 800,
     usingAbility: false,
-    abiltyTime: 130,
+    abilityTime: 130,
     // abiltyTime: 700,
 }
 
@@ -775,7 +775,7 @@ function modifiedGameplay(){
 
 function ability(){
     if(char.usingAbility){
-        char.abilityCounter -= (char.abilityReload/char.abiltyTime);
+        char.abilityCounter -= (char.abilityReload/char.abilityTime);
         char.ability();
         if(char.abilityCounter<=0){
             char.abilityEnd();
