@@ -35,11 +35,12 @@ let turrets = document.getElementsByClassName('autoTurret');
 
 let debugMode = false;
 
+// let lobbySound = new Audio('sounds/cyberpunkHeavy.mp3');
 let lobbySound = new Audio('sounds/lobbyAmbience.mp3');
 let bossPhase1Sound = new Audio('sounds/bossMusic2.mp3');
 let bossPhase2Sound = new Audio('sounds/bossMusic1.mp3');
 let bossPhase3StartSound = new Audio('sounds/dramaticBuildup.mp3');
-let bossPhase3Sound = new Audio('sounds/');
+let bossPhase3Sound = new Audio('sounds/cyberpunkHeavy.mp3');
 let shootSound = new Audio('sounds/electronicBullet.mp3');
 let enemyShootSound = new Audio('sounds/otherBullet.mp3');
 let collisionSound = new Audio('sounds/');
@@ -54,6 +55,7 @@ bossPhase2Sound.volume = 0.3;
 bossPhase2Sound.loop = true;
 bossPhase3Sound.volume = 0.3;
 bossPhase3Sound.loop = true;
+bossPhase3Sound.currentTime = 12;
 lobbySound.play();
 
 let buttons = document.getElementsByTagName('button');
@@ -612,8 +614,8 @@ const char = {
     abilityReload: 800,
     abilityCounter: 800,
     usingAbility: false,
-    abiltyTime: 130,
-    // abiltyTime: 360,
+    // abiltyTime: 130,
+    abiltyTime: 700,
 }
 
 document.addEventListener("keydown", (e) => {
@@ -989,6 +991,7 @@ function doBoss(b){
             bossPhase3StartSound.playbackRate = 4;
             bossPhase3StartSound.play();
             if(song != bossPhase3Sound){
+                console.log('yeah')
                 fadeIn(bossPhase3Sound, 10000);
             }
             if(song = bossPhase1Sound){
@@ -1006,11 +1009,12 @@ function doBoss(b){
             if(song = bossPhase1Sound){
                 fadeOut(bossPhase1Sound, 10000);
             }
-            if(song = bossPhase3Sound){
-                fadeOut(bossPhase3Sound, 10000);
-            }
+            // if(song = bossPhase3Sound){
+            //     console.log('noYeah')
+            //     fadeOut(bossPhase3Sound, 10000);
+            // }
             song = bossPhase2Sound;
-        } else {
+        } else if (!(b.element.style.boxShadow).includes('red')){
             if(song != bossPhase1Sound){
                 fadeIn(bossPhase1Sound, 10000);
             }
@@ -1744,7 +1748,7 @@ function startRapidFire(){
 
 for (let i = 0; i < buttons.length; i++) {
     const button = buttons[i];
-    buttonHoverSound.volume = 0.3;
+    buttonHoverSound.volume = 0.6;
     button.addEventListener('mouseover', function() {
         buttonHoverSound.play();
     }, false);
@@ -1784,8 +1788,9 @@ function fadeOut(audio, duration) {
             volume -= decrement;
             audio.volume = volume;
         } else {
-        audio.pause();
+            audio.pause();
             audio.volume = 0;
+            audio.currentTime = 0;
             clearInterval(fadeInterval);
         }
     }, intervalTime);
